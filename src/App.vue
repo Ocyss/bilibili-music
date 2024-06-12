@@ -6,6 +6,7 @@ import StepEmbed from "@/steps/embed.vue";
 import StepInfo from "@/steps/info.vue";
 import StepLyrics from "@/steps/lyrics.vue";
 import { fromData, reset } from "./data";
+import { clone } from "./utils/deepmerge";
 const visible = ref(true);
 const current = ref(1);
 const steps = [StepInfo, StepCover, StepLyrics, StepAudio, StepEmbed];
@@ -39,6 +40,11 @@ onMounted(() => {
   fromData.upName = upName?.textContent?.trim();
   const music_id = bgmTag?.__vue__?.$props?.info?.music_id;
   console.log("获取到的Music ID:", music_id, bgmTag?.__vue__);
+
+  fromData.videoData = clone(
+    document.querySelector<HTMLDivElement & { __vue__: any }>("#playerWrap")!
+      .__vue__.videoData
+  );
 
   fetch(
     "https://api.bilibili.com/x/copyright-music-publicity/bgm/detail?" +

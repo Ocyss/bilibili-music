@@ -6,6 +6,9 @@ export const defaultData = {
   err: null as any,
   upName: undefined as string | undefined,
   coverUrl: null as null | string,
+  lyricsId: null as null | number,
+  videoData: null as VideoData | null,
+  playerData: null as PlayerData | null,
 };
 
 export const fromData = reactive(clone(defaultData));

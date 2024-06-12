@@ -4,6 +4,9 @@ import monkey, { cdn } from "vite-plugin-monkey";
 import { vitePluginForArco } from "@arco-plugins/vite-vue";
 import process from "process";
 import path from "path";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ArcoResolver } from "unplugin-vue-components/resolvers";
 
 const pathSrc = path.resolve(__dirname, "src");
 
@@ -17,6 +20,19 @@ export default defineConfig(() => {
       vue(),
       vitePluginForArco({
         style: "css",
+      }),
+      AutoImport({
+        dts: true,
+        imports: ["vue"],
+        resolvers: [ArcoResolver()],
+      }),
+      Components({
+        dts: true,
+        resolvers: [
+          ArcoResolver({
+            sideEffect: true,
+          }),
+        ],
       }),
       monkey({
         entry: "src/main.ts",
@@ -35,6 +51,7 @@ export default defineConfig(() => {
           namespace: "https://github.com/Ocyss/bilibili-music",
           homepage: "https://github.com/Ocyss/bilibili-music",
           match: ["https://www.bilibili.com/video/*"],
+          connect: ["api.bilibili.com", "hdslb.com"],
         },
         build: {
           externalGlobals: {

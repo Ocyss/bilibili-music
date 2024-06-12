@@ -34,6 +34,7 @@ interface MusicData {
   music_hot: number;
   music_relation: number;
   music_publish: string;
+  mv_lyric_data?: string; // 手动请求补充
 }
 
 interface HotSongHeat {

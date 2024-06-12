@@ -4,23 +4,17 @@ import { onMounted, reactive } from "vue";
 
 const covers = reactive<{ label: string; url?: string }[]>([]);
 onMounted(() => {
-  const video = document.querySelector<HTMLMetaElement>(
-    'meta[itemprop="image"]'
-  )?.content;
   covers.push({
     label: "视频封面",
-    url: video,
+    url: fromData.videoData?.pic,
   });
   covers.push({
     label: "音乐封面",
     url: fromData.data?.mv_cover,
   });
-  const avatar = document.querySelector<HTMLLinkElement>(
-    ".up-info-container .bili-avatar-img"
-  )?.dataset?.src;
   covers.push({
     label: "Up主头像",
-    url: avatar,
+    url: fromData.videoData?.owner.face,
   });
 });
 </script>
@@ -28,34 +22,32 @@ onMounted(() => {
 <template>
   <a-spin :loading="!fromData.data || covers.length !== 3">
     <a-form auto-label-width @submit="$emit('next')">
-      <a-form-item label="封面选择">
-        <a-radio-group
-          v-model="fromData.coverUrl"
-          @change="(v:string) => fromData.coverUrl=v"
-        >
-          <template v-for="item in covers" :key="item.label">
-            <a-radio :value="item.url">
-              <template #radio="{ checked }">
-                <a-space
-                  align="start"
-                  class="custom-radio-card"
-                  :class="{ 'custom-radio-card-checked': checked }"
-                >
-                  <div className="custom-radio-card-mask">
-                    <div className="custom-radio-card-mask-dot" />
+      <a-radio-group
+        v-model="fromData.coverUrl"
+        @change="(v:string) => fromData.coverUrl=v"
+      >
+        <template v-for="item in covers" :key="item.label">
+          <a-radio :value="item.url">
+            <template #radio="{ checked }">
+              <a-space
+                align="start"
+                class="custom-radio-card"
+                :class="{ 'custom-radio-card-checked': checked }"
+              >
+                <div className="custom-radio-card-mask">
+                  <div className="custom-radio-card-mask-dot" />
+                </div>
+                <div>
+                  <div className="custom-radio-card-title">
+                    {{ item.label }}
                   </div>
-                  <div>
-                    <div className="custom-radio-card-title">
-                      {{ item.label }}
-                    </div>
-                    <a-image width="80" :src="item.url" />
-                  </div>
-                </a-space>
-              </template>
-            </a-radio>
-          </template>
-        </a-radio-group>
-      </a-form-item>
+                  <a-image width="80" :src="item.url" />
+                </div>
+              </a-space>
+            </template>
+          </a-radio>
+        </template>
+      </a-radio-group>
 
       <a-form-item>
         <a-button @click="$emit('prev')" style="margin-right: 10px">
