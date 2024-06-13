@@ -23,10 +23,12 @@ export type RequestArgs<TContext, TResponseType extends ResponseType> = Partial<
     "method" | "url" | "data" | "headers" | "timeout" | "responseType"
   > & {
     onStream: OnStream;
+    cookie: boolean;
   }
 >;
 type ResolvedReturnType<T extends (...args: any) => any> =
   ReturnType<T> extends Promise<infer R> ? R : ReturnType<T>;
+
 export function request<TContext, TResponseType extends ResponseType = "json">({
   method = "POST",
   url = "",
@@ -35,18 +37,20 @@ export function request<TContext, TResponseType extends ResponseType = "json">({
   timeout = 5,
   responseType = "json" as TResponseType,
   onStream = () => {},
+  cookie = true,
 }: RequestArgs<TContext, TResponseType>) {
   return new Promise<TContext>(async (resolve, reject) => {
-    const cookie = await new Promise<
-      ResolvedReturnType<(typeof GM_cookie)["list"]>
-    >((resolve, reject) =>
-      GM_cookie.list({}, (ck, err) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(ck);
-      })
-    );
+    const ck = cookie
+      ? await new Promise<ResolvedReturnType<(typeof GM_cookie)["list"]>>(
+          (resolve, reject) =>
+            GM_cookie.list({}, (ck, err) => {
+              if (err) {
+                reject(err);
+              }
+              resolve(ck);
+            })
+        )
+      : [];
     const abort = GM_xmlhttpRequest<TContext, TResponseType>({
       method,
       url,
@@ -54,7 +58,7 @@ export function request<TContext, TResponseType extends ResponseType = "json">({
       headers,
       timeout: timeout * 1000,
       responseType,
-      cookie: cookie.map((c) => `${c.name}=${c.value}`).join("; "),
+      cookie: ck.map((c) => `${c.name}=${c.value}`).join("; "),
 
       ontimeout() {
         reject(new RequestError(`超时 ${Math.round(timeout / 1000)}s`));

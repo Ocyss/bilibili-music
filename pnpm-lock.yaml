@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      browser-id3-writer:
+        specifier: ^6.1.0
+        version: 6.1.0
       vue:
         specifier: ^3.4.27
         version: 3.4.27(typescript@5.4.5)
@@ -488,6 +491,9 @@ packages:
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
+
+  browser-id3-writer@6.1.0:
+    resolution: {integrity: sha512-99mQN3GAZlqWnbA0cispSAab9uJJzzv86ffoA/w6ohfqAi/5qOGbEhh0fRAQMrnhsOBsy89mqMc+JdnaWtJObw==}
 
   bundle-name@3.0.0:
     resolution: {integrity: sha512-PKA4BeSvBpQKQ8iPOGCSiell+N8P+Tf1DlwqmYhpe2gAhKPHn8EYOxVT+ShuGmhg8lN8XiSlS80yiExKXrURlw==}
@@ -1423,6 +1429,8 @@ snapshots:
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
+
+  browser-id3-writer@6.1.0: {}
 
   bundle-name@3.0.0:
     dependencies:

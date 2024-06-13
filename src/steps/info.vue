@@ -1,5 +1,10 @@
 <script lang="ts" setup>
 import { fromData } from "@/data";
+onMounted(() => {
+  fromData.title = `${fromData.data?.music_title}-${fromData.upName}`;
+  fromData.author = `${fromData.upName}(原:${fromData.data?.origin_artist})`;
+  fromData.file = `${fromData.title}.m4s`;
+});
 </script>
 
 <template>
@@ -16,13 +21,13 @@ import { fromData } from "@/data";
       </a-form-item>
 
       <a-form-item label="内嵌标题">
-        <a-input :model-value="fromData.data?.music_title" />
+        <a-input v-model="fromData.title" />
       </a-form-item>
       <a-form-item label="内嵌作者">
-        <a-input :model-value="fromData.data?.music_title" />
+        <a-input v-model="fromData.author" />
       </a-form-item>
       <a-form-item label="下载文件名">
-        <a-input :model-value="fromData.data?.music_title" />
+        <a-input v-model="fromData.file" />
       </a-form-item>
       <a-form-item>
         <a-button html-type="submit">下一步</a-button>

@@ -9,6 +9,10 @@ export const defaultData = {
   lyricsId: null as null | number,
   videoData: null as VideoData | null,
   playerData: null as PlayerData | null,
+  videoParse: null as VideoParse | null,
+  title: "",
+  author: "",
+  file: "",
 };
 
 export const fromData = reactive(clone(defaultData));
