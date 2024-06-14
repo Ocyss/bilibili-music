@@ -6,7 +6,7 @@ export const defaultData = {
   err: null as any,
   upName: undefined as string | undefined,
   coverUrl: null as null | string,
-  lyricsId: null as null | number,
+  lyricsId: null as null | string,
   videoData: null as VideoData | null,
   playerData: null as PlayerData | null,
   videoParse: null as VideoParse | null,
@@ -21,9 +21,4 @@ export const reset = () => {
   deepmerge(fromData, defaultData, { clone: false });
 };
 
-declare global {
-  interface Window {
-    _bilibili_music_fromData: typeof defaultData;
-  }
-}
 unsafeWindow._bilibili_music_fromData = fromData;

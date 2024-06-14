@@ -3,7 +3,7 @@ import { fromData } from "@/data";
 onMounted(() => {
   fromData.title = `${fromData.data?.music_title}-${fromData.upName}`;
   fromData.author = `${fromData.upName}(原:${fromData.data?.origin_artist})`;
-  fromData.file = `${fromData.title}.m4s`;
+  fromData.file = `${fromData.title}.m4a`;
 });
 </script>
 

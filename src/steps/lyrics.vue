@@ -57,14 +57,14 @@ onMounted(() => {
     <a-form auto-label-width @submit="$emit('next')">
       <a-radio-group
         v-model="fromData.lyricsId"
-        @change="(v:number) => fromData.lyricsId=v"
+        @change="(v:string) => fromData.lyricsId=v"
         v-if="fromData.playerData"
       >
         <template
           v-for="item in fromData.playerData.subtitle.subtitles"
           :key="item.id"
         >
-          <a-radio :value="item.id">
+          <a-radio :value="item.id_str">
             <template #radio="{ checked }">
               <a-space
                 align="start"

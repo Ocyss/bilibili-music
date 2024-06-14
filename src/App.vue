@@ -99,7 +99,12 @@ onMounted(() => {
           color: '#C2C7CC',
         }"
       >
-        <component :is="steps[current - 1]" @prev="onPrev" @next="onNext" />
+        <component
+          v-if="fromData.data"
+          :is="steps[current - 1]"
+          @prev="onPrev"
+          @next="onNext"
+        />
       </div>
     </div>
   </a-modal>

@@ -51,12 +51,7 @@ export default defineConfig(() => {
           namespace: "https://github.com/Ocyss/bilibili-music",
           homepage: "https://github.com/Ocyss/bilibili-music",
           match: ["https://www.bilibili.com/video/*"],
-          connect: [
-            "api.bilibili.com",
-            "hdslb.com",
-            "mxnzp.com",
-            "bilivideo.com",
-          ],
+          connect: ["bilibili.com", "hdslb.com", "mxnzp.com", "bilivideo.com"],
         },
         build: {
           externalGlobals: {
