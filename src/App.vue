@@ -14,6 +14,7 @@ const steps = [StepInfo, StepCover, StepLyrics, StepAudio, StepEmbed];
 const handleOk = () => {
   visible.value = false;
 };
+
 const handleCancel = () => {
   visible.value = false;
 };
@@ -36,16 +37,21 @@ onMounted(() => {
   const bgmTag = document.querySelector<HTMLDivElement & { __vue__: any }>(
     ".tag .bgm-tag"
   );
-  const upName = document.querySelector(".up-name");
-  fromData.upName = upName?.textContent?.trim();
   const music_id = bgmTag?.__vue__?.$props?.info?.music_id;
+  if (!music_id) {
+    fromData.err = "未找到音乐ID，后续操作无法继续";
+    return;
+  }
   console.log("获取到的Music ID:", music_id, bgmTag?.__vue__);
 
   fromData.videoData = clone(
-    document.querySelector<HTMLDivElement & { __vue__: any }>("#playerWrap")!
-      .__vue__.videoData
+    document.querySelector<HTMLDivElement & { __vue__: any }>("#playerWrap")
+      ?.__vue__?.videoData
   );
-
+  if (!fromData.videoData) {
+    fromData.err = "未找到视频数据，后续操作无法继续";
+    return;
+  }
   fetch(
     "https://api.bilibili.com/x/copyright-music-publicity/bgm/detail?" +
       new URLSearchParams({
@@ -99,12 +105,18 @@ onMounted(() => {
           color: '#C2C7CC',
         }"
       >
+        <a-result
+          v-if="fromData.err"
+          status="error"
+          :title="fromData.err"
+        ></a-result>
         <component
-          v-if="fromData.data"
+          v-else-if="fromData.data"
           :is="steps[current - 1]"
           @prev="onPrev"
           @next="onNext"
         />
+        <a-spin v-else />
       </div>
     </div>
   </a-modal>

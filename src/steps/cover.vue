@@ -21,7 +21,7 @@ onMounted(() => {
 
 <template>
   <a-spin :loading="!fromData.data || covers.length !== 3">
-    <a-form auto-label-width @submit="$emit('next')">
+    <a-form auto-label-width>
       <a-radio-group
         v-model="fromData.coverUrl"
         @change="(v:string) => fromData.coverUrl=v"
@@ -41,7 +41,7 @@ onMounted(() => {
                   <div className="custom-radio-card-title">
                     {{ item.label }}
                   </div>
-                  <a-image width="80" :src="item.url" />
+                  <a-image width="80" :src="item.url" :preview="false" />
                 </div>
               </a-space>
             </template>
@@ -53,7 +53,7 @@ onMounted(() => {
         <a-button @click="$emit('prev')" style="margin-right: 10px">
           上一步
         </a-button>
-        <a-button html-type="submit">下一步</a-button>
+        <a-button @click="$emit('next')">下一步</a-button>
       </a-form-item>
     </a-form>
   </a-spin>

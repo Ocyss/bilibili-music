@@ -28,9 +28,10 @@ export default defineConfig(() => {
       }),
       Components({
         dts: true,
+        dirs: "src/steps",
         resolvers: [
           ArcoResolver({
-            sideEffect: true,
+            sideEffect: false,
           }),
         ],
       }),

@@ -3,6 +3,9 @@ import { fromData } from "@/data";
 import { request } from "@/utils/requests";
 import { ID3Writer } from "browser-id3-writer";
 import { GM_download } from "$";
+import audiobufferToBlob from "audiobuffer-to-blob";
+let writer: ID3Writer;
+const audioCtx = new AudioContext();
 
 onMounted(() => {
   const avid = fromData.playerData?.aid;
@@ -32,16 +35,28 @@ onMounted(() => {
         console.error(`Unable to fetch ${audioUrl}`);
       }
 
-      return await request.arrayBuffer();
+      return new Promise<AudioBuffer>((reactive) => {
+        request.arrayBuffer().then((arrBuf) => {
+          audioCtx.decodeAudioData(arrBuf, (buf) => {
+            reactive(buf);
+          });
+        });
+      });
     })
-    .then(async (buf) => {
-      console.log(buf);
-      if (!buf) return;
+    .then(async (audioBuf) => {
+      console.log(audioBuf);
+      if (!audioBuf) return;
       const img = await fetch(
         fromData.coverUrl!.replace("http://", "https://")
       );
       const imgBuf = await img.arrayBuffer();
-      const writer = new ID3Writer(buf);
+
+      const buf = await new Promise<ArrayBuffer>((reactive) => {
+        const blob = audiobufferToBlob(audioBuf);
+        reactive(blob.arrayBuffer());
+      });
+
+      writer = new ID3Writer(buf);
       const layric = fromData.playerData?.subtitle.subtitles.find(
         (item) => item.id_str === fromData.lyricsId
       );
@@ -82,23 +97,25 @@ onMounted(() => {
           description: layric?.lan_doc ?? "lyrics",
         })
         .addTag();
-      console.log(writer);
-
-      GM_download({
-        url: writer.getURL(),
-        name: fromData.file || "audio.m4a",
-        onload: () => {
-          console.log("下载完成");
-        },
-        onerror(event) {
-          console.log(event);
-        },
-      });
-      down();
     });
 });
 
-function down() {}
+function down() {
+  if (!writer) {
+    console.log("no writer", writer);
+    return;
+  }
+  GM_download({
+    url: writer.getURL(),
+    name: fromData.file || "audio.m4a",
+    onload: () => {
+      console.log("下载完成");
+    },
+    onerror(event) {
+      console.log(event);
+    },
+  });
+}
 </script>
 
 <template>

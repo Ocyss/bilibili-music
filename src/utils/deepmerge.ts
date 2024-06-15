@@ -74,5 +74,6 @@ export function deepmerge<T>(
 }
 
 export function clone<T>(source: T): T {
+  if (!source) return source;
   return JSON.parse(JSON.stringify(source));
 }

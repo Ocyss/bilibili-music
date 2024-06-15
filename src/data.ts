@@ -4,7 +4,6 @@ import { unsafeWindow } from "$";
 export const defaultData = {
   data: null as MusicData | null,
   err: null as any,
-  upName: undefined as string | undefined,
   coverUrl: null as null | string,
   lyricsId: null as null | string,
   videoData: null as VideoData | null,
