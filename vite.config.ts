@@ -7,6 +7,7 @@ import path from "path";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ArcoResolver } from "unplugin-vue-components/resolvers";
+import wasm from "vite-plugin-wasm";
 
 const pathSrc = path.resolve(__dirname, "src");
 
@@ -17,6 +18,7 @@ export default defineConfig(() => {
   const VITE_VERSION = env.VITE_VERSION ?? "dev";
   return {
     plugins: [
+      wasm(),
       vue(),
       vitePluginForArco({
         style: "css",

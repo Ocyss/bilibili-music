@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { fromData } from "@/data";
 import { request } from "@/utils/requests";
-import { ID3Writer } from "browser-id3-writer";
 import { GM_download } from "$";
 import audiobufferToBlob from "audiobuffer-to-blob";
-let writer: ID3Writer;
+import * as biliMusic from "../../backend/pkg/bilibili_music_backend.js";
+
 const audioCtx = new AudioContext();
 
 onMounted(() => {
@@ -34,87 +34,111 @@ onMounted(() => {
         // handle error
         console.error(`Unable to fetch ${audioUrl}`);
       }
+      console.log({ r: res.data.dash, request });
 
-      return new Promise<AudioBuffer>((reactive) => {
-        request.arrayBuffer().then((arrBuf) => {
-          audioCtx.decodeAudioData(arrBuf, (buf) => {
-            reactive(buf);
+      const blob = await new Promise<Blob>((reactive) => {
+        request
+          .arrayBuffer()
+          .then((arrBuf) => {
+            console.log({ arrBuf });
+            // GM_download({
+            //   url: URL.createObjectURL(new Blob([arrBuf])),
+            //   name: "testttt.m4a",
+            // });
+            audioCtx.decodeAudioData(arrBuf, (buf) => {
+              console.log({ buf });
+
+              const blob = audiobufferToBlob(buf);
+              console.log({ blob });
+
+              reactive(blob);
+            });
+          })
+          .catch((e) => {
+            console.log(e);
           });
-        });
       });
+      // const url = URL.createObjectURL(blob);
+      // GM_download({
+      //   url,
+      //   name: "ttttattata11.wav",
+      //   onload: () => {
+      //     console.log("ok11");
+      //   },
+      //   onerror: (e) => {
+      //     console.log("err11", e);
+      //   },
+      //   ontimeout: () => {
+      //     console.log("ontimeouterr11");
+      //   },
+      //   onprogress: (e) => {
+      //     console.log("onprogresserr11", e);
+      //   },
+      // });
+      // console.log({ blob, a: "123", url });
+      // down();
+      // return undefined;
+      return blob;
     })
-    .then(async (audioBuf) => {
-      console.log(audioBuf);
-      if (!audioBuf) return;
+    .then(async (blob) => {
+      if (!blob) {
+        console.log("no blob");
+        return;
+      }
       const img = await fetch(
         fromData.coverUrl!.replace("http://", "https://")
       );
       const imgBuf = await img.arrayBuffer();
 
-      const buf = await new Promise<ArrayBuffer>((reactive) => {
-        const blob = audiobufferToBlob(audioBuf);
-        reactive(blob.arrayBuffer());
+      const res = biliMusic.add_tag(await blobToUint8Array(blob), {
+        author: fromData.author,
+        title: fromData.title,
+        album: fromData.data?.album ?? "",
+        host: location.href.split("?")[0],
+        cover: new Uint8Array(imgBuf),
+        cover_mime: "image/jpeg",
+        layric: [],
       });
-
-      writer = new ID3Writer(buf);
-      const layric = fromData.playerData?.subtitle.subtitles.find(
-        (item) => item.id_str === fromData.lyricsId
-      );
-
-      writer
-        .setFrame("TPE1", [fromData.author])
-        .setFrame("TCOM", [fromData.author])
-        .setFrame("TIT2", fromData.title)
-        .setFrame("TALB", fromData.data?.album ?? "")
-
-        .setFrame(
-          "WCOP",
-          "Bilibili🎶音乐姬下载,仅供个人学习使用,严谨售卖和其他侵权行为,版权解释权为原作者|Up主|B站"
-        )
-        .setFrame("WOAS", location.href.split("?")[0])
-        .setFrame("APIC", { type: 3, data: imgBuf, description: "cover" })
-        .setFrame("SYLT", {
-          type: 1,
-          text: layric!.data!.body.map((item) => {
-            return [item.content, item.from * 1000];
-          }),
-
-          timestampFormat: 2,
-          description: layric?.lan_doc,
-        })
-        .setFrame("USLT", {
-          lyrics:
-            "[offset:0]\n" +
-            layric!
-              .data!.body.map((item) => {
-                const n1 = Math.floor(item.from / 60)
-                  .toString()
-                  .padStart(2, "0");
-                const n2 = (item.from % 60).toFixed(3).padStart(5, "0");
-                return `[${n1}:${n2}]${item.content}`;
-              })
-              .join("\n"),
-          description: layric?.lan_doc ?? "lyrics",
-        })
-        .addTag();
+      console.log(res);
+      const url = URL.createObjectURL(uint8ArrayToBlob(res, "audio/wav"));
+      GM_download({
+        url,
+        name: "ttttattata22.wav",
+        onload: () => {
+          console.log("ok");
+        },
+        onerror: (e) => {
+          console.log("err", e);
+        },
+        ontimeout: () => {
+          console.log("ontimeouterr");
+        },
+        onprogress: (e) => {
+          console.log("onprogresserr", e);
+        },
+      });
     });
 });
 
-function down() {
-  if (!writer) {
-    console.log("no writer", writer);
-    return;
-  }
-  GM_download({
-    url: writer.getURL(),
-    name: fromData.file || "audio.m4a",
-    onload: () => {
-      console.log("下载完成");
-    },
-    onerror(event) {
-      console.log(event);
-    },
+function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      const arrayBuffer = fileReader.result as ArrayBuffer;
+      resolve(arrayBuffer);
+    };
+    fileReader.onerror = reject;
+    fileReader.readAsArrayBuffer(blob);
   });
+}
+function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
+  return blobToArrayBuffer(blob).then((buff) => new Uint8Array(buff));
+}
+function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
+  return new Blob([array], { type });
+}
+function down() {
+  // console.log(1, url);
 }
 </script>
 

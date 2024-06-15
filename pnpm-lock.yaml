@@ -8,15 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@breezystack/lamejs':
-        specifier: ^1.2.7
-        version: 1.2.7
       audiobuffer-to-blob:
         specifier: ^1.0.2
         version: 1.0.2
-      browser-id3-writer:
-        specifier: ^6.1.0
-        version: 6.1.0
       vue:
         specifier: ^3.4.27
         version: 3.4.27(typescript@5.4.5)
@@ -48,6 +42,9 @@ importers:
       vite-plugin-monkey:
         specifier: ^4.0.0
         version: 4.0.3(vite@5.2.13(@types/node@20.14.2))
+      vite-plugin-wasm:
+        specifier: ^3.3.0
+        version: 3.3.0(vite@5.2.13(@types/node@20.14.2))
       vue-tsc:
         specifier: ^2.0.19
         version: 2.0.21(typescript@5.4.5)
@@ -124,9 +121,6 @@ packages:
   '@babel/types@7.24.7':
     resolution: {integrity: sha512-XEFXSlxiG5td2EJRe8vOmRbaXVgfcBlszKujvVmWIK/UpywWljQCfzAv3RQCGujWQ1RD4YYWEAqDXfuJiy8f5Q==}
     engines: {node: '>=6.9.0'}
-
-  '@breezystack/lamejs@1.2.7':
-    resolution: {integrity: sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==}
 
   '@esbuild/aix-ppc64@0.20.2':
     resolution: {integrity: sha512-D+EBOJHXdNZcLJRBkhENNG8Wji2kgc9AZ9KiPr1JuZjsNtyHzrsfLRrY0tk2H2aoFu6RANO1y1iPPUCDYWkb5g==}
@@ -503,9 +497,6 @@ packages:
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
-
-  browser-id3-writer@6.1.0:
-    resolution: {integrity: sha512-99mQN3GAZlqWnbA0cispSAab9uJJzzv86ffoA/w6ohfqAi/5qOGbEhh0fRAQMrnhsOBsy89mqMc+JdnaWtJObw==}
 
   buffer-alloc-unsafe@1.1.0:
     resolution: {integrity: sha512-TEM2iMIEQdJ2yjPJoSIsldnleVaAk1oW3DBVUykyOLsEsFmEc9kn+SFFPz+gl54KQNxlDnAwCXosOS9Okx2xAg==}
@@ -1033,6 +1024,11 @@ packages:
       vite:
         optional: true
 
+  vite-plugin-wasm@3.3.0:
+    resolution: {integrity: sha512-tVhz6w+W9MVsOCHzxo6SSMSswCeIw4HTrXEi6qL3IRzATl83jl09JVO1djBqPSwfjgnpVHNLYcaMbaDX5WB/pg==}
+    peerDependencies:
+      vite: ^2 || ^3 || ^4 || ^5
+
   vite@5.2.13:
     resolution: {integrity: sha512-SSq1noJfY9pR3I1TUENL3rQYDQCFqgD+lM6fTRAM8Nv6Lsg5hDLaXkjETVeBt+7vZBCMoibD+6IWnT2mJ+Zb/A==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -1204,8 +1200,6 @@ snapshots:
       '@babel/helper-string-parser': 7.24.7
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
-
-  '@breezystack/lamejs@1.2.7': {}
 
   '@esbuild/aix-ppc64@0.20.2':
     optional: true
@@ -1493,8 +1487,6 @@ snapshots:
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
-
-  browser-id3-writer@6.1.0: {}
 
   buffer-alloc-unsafe@1.1.0: {}
 
@@ -2043,6 +2035,10 @@ snapshots:
       picocolors: 1.0.1
       systemjs: 6.15.1
     optionalDependencies:
+      vite: 5.2.13(@types/node@20.14.2)
+
+  vite-plugin-wasm@3.3.0(vite@5.2.13(@types/node@20.14.2)):
+    dependencies:
       vite: 5.2.13(@types/node@20.14.2)
 
   vite@5.2.13(@types/node@20.14.2):
