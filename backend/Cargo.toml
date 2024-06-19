@@ -2,6 +2,17 @@
 edition = "2021"
 name = "bilibili-music-backend"
 version = "0.1.0"
+authors = ["ocyss <bilimusic@ocyss.icu>"]
+description = "Bilibili🎶音乐姬 后端WASM程序"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/Ocyss/bilibili-music"
+
+[profile.release]
+opt-level = "z" 
+lto = true
+codegen-units = 1
+strip = true
+
 
 [lib]
 crate-type = ["cdylib"]

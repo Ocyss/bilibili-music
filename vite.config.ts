@@ -30,7 +30,8 @@ export default defineConfig(() => {
       }),
       Components({
         dts: true,
-        dirs: "src/steps",
+        dirs: ["src/steps", "src/components"],
+        include: /.vue$/,
         resolvers: [
           ArcoResolver({
             sideEffect: false,

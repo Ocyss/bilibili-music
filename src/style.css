@@ -30,3 +30,62 @@
     }
   }
 }
+
+.custom-checkbox-card {
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-2);
+  border-radius: 4px;
+  width: 250px;
+  box-sizing: border-box;
+}
+
+.custom-checkbox-card-mask {
+  height: 14px;
+  width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  border: 1px solid var(--color-border-2);
+  box-sizing: border-box;
+}
+
+.custom-checkbox-card-mask-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.custom-checkbox-card-title {
+  color: var(--color-text-1);
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.custom-checkbox-card:hover,
+.custom-checkbox-card-checked,
+.custom-checkbox-card:hover .custom-checkbox-card-mask,
+.custom-checkbox-card-checked .custom-checkbox-card-mask {
+  border-color: rgb(var(--primary-6));
+}
+
+.custom-checkbox-card-checked {
+  background-color: var(--color-primary-light-1);
+}
+
+.custom-checkbox-card:hover .custom-checkbox-card-title,
+.custom-checkbox-card-checked .custom-checkbox-card-title {
+  color: rgb(var(--primary-6));
+}
+
+.custom-checkbox-card-checked .custom-checkbox-card-mask-dot {
+  background-color: rgb(var(--primary-6));
+}
+
+.arco-steps-item-active .arco-steps-icon,
+.arco-btn.arco-btn-primary,
+.arco-steps-item:not(:last-child).arco-steps-item-finish
+  .arco-steps-item-tail::after {
+  background-color: var(--brand_blue) !important;
+}

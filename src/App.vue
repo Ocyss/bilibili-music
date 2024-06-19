@@ -2,14 +2,13 @@
 import { onMounted, reactive, ref } from "vue";
 import StepAudio from "@/steps/audio.vue";
 import StepCover from "@/steps/cover.vue";
-import StepEmbed from "@/steps/embed.vue";
 import StepInfo from "@/steps/info.vue";
 import StepLyrics from "@/steps/lyrics.vue";
 import { fromData, reset } from "./data";
 import { clone } from "./utils/deepmerge";
 const visible = ref(true);
 const current = ref(1);
-const steps = [StepInfo, StepCover, StepLyrics, StepAudio, StepEmbed];
+const steps = [StepInfo, StepCover, StepLyrics, StepAudio];
 
 const handleOk = () => {
   visible.value = false;
@@ -94,8 +93,7 @@ onMounted(() => {
         <a-step>基本信息</a-step>
         <a-step>封面获取</a-step>
         <a-step>歌词获取</a-step>
-        <a-step>音频获取</a-step>
-        <a-step>标签嵌入</a-step>
+        <a-step>音频内嵌</a-step>
       </a-steps>
       <div
         :style="{
@@ -109,7 +107,8 @@ onMounted(() => {
           v-if="fromData.err"
           status="error"
           :title="fromData.err"
-        ></a-result>
+          subtitle="您可以重新打开弹窗, 重新获取数据, 或者刷新页面. 如果多次且更换视频也无法使用请联系开发者"
+        />
         <component
           v-else-if="fromData.data"
           :is="steps[current - 1]"
@@ -122,4 +121,10 @@ onMounted(() => {
   </a-modal>
 </template>
 
-<style scoped></style>
+<style>
+/* .arco-modal,
+.arco-modal-title {
+  background: var(--bpx-aux-header-bg, #f4f4f4);
+  color: var(--text1);
+} */
+</style>

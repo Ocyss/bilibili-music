@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vite build",
+    "build:tsc": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ocyss/bilibili-music-backend": "^0.1.0",
     "audiobuffer-to-blob": "^1.0.2",
     "vue": "^3.4.27"
   },

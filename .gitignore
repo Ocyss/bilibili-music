@@ -26,3 +26,4 @@ dist-ssr
 backend/data
 backend/target
 backend/pkg
+backend/testdata/test_out.wav

@@ -1,8 +1,12 @@
 <script lang="ts" setup>
 import { fromData } from "@/data";
 import { onMounted, reactive } from "vue";
+import Btn from "@/components/btn.vue";
 
 const covers = reactive<{ label: string; url?: string }[]>([]);
+
+const cover = ref<string[]>([]);
+
 onMounted(() => {
   covers.push({
     label: "视频封面",
@@ -16,99 +20,51 @@ onMounted(() => {
     label: "Up主头像",
     url: fromData.videoData?.owner.face,
   });
+  const url = covers?.[0]?.url;
+  if (url) cover.value = [url];
 });
+const onChange = (v: (string | number | boolean)[]) => {
+  const val = v.pop();
+  if (val) {
+    fromData.coverUrl = val.toString();
+    cover.value = [val.toString()];
+  } else {
+    fromData.coverUrl = null;
+    cover.value = [];
+  }
+};
 </script>
 
 <template>
   <a-spin :loading="!fromData.data || covers.length !== 3">
     <a-form auto-label-width>
-      <a-radio-group
-        v-model="fromData.coverUrl"
-        @change="(v:string) => fromData.coverUrl=v"
-      >
+      <a-checkbox-group :model-value="cover" @change="onChange">
         <template v-for="item in covers" :key="item.label">
-          <a-radio :value="item.url">
-            <template #radio="{ checked }">
+          <a-checkbox :value="item.url">
+            <template #checkbox="{ checked }">
               <a-space
                 align="start"
-                class="custom-radio-card"
-                :class="{ 'custom-radio-card-checked': checked }"
+                class="custom-checkbox-card"
+                :class="{ 'custom-checkbox-card-checked': checked }"
               >
-                <div className="custom-radio-card-mask">
-                  <div className="custom-radio-card-mask-dot" />
+                <div className="custom-checkbox-card-mask">
+                  <div className="custom-checkbox-card-mask-dot" />
                 </div>
                 <div>
-                  <div className="custom-radio-card-title">
+                  <div className="custom-checkbox-card-title">
                     {{ item.label }}
                   </div>
                   <a-image width="80" :src="item.url" :preview="false" />
                 </div>
               </a-space>
             </template>
-          </a-radio>
+          </a-checkbox>
         </template>
-      </a-radio-group>
+      </a-checkbox-group>
 
-      <a-form-item>
-        <a-button @click="$emit('prev')" style="margin-right: 10px">
-          上一步
-        </a-button>
-        <a-button @click="$emit('next')">下一步</a-button>
-      </a-form-item>
+      <Btn @next="$emit('next')" @prev="$emit('prev')" />
     </a-form>
   </a-spin>
 </template>
 
-<style scoped>
-.custom-radio-card {
-  padding: 10px 16px;
-  border: 1px solid var(--color-border-2);
-  border-radius: 4px;
-  width: 250px;
-  box-sizing: border-box;
-}
-
-.custom-radio-card-mask {
-  height: 14px;
-  width: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 100%;
-  border: 1px solid var(--color-border-2);
-  box-sizing: border-box;
-}
-
-.custom-radio-card-mask-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 100%;
-}
-
-.custom-radio-card-title {
-  color: var(--color-text-1);
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.custom-radio-card:hover,
-.custom-radio-card-checked,
-.custom-radio-card:hover .custom-radio-card-mask,
-.custom-radio-card-checked .custom-radio-card-mask {
-  border-color: rgb(var(--primary-6));
-}
-
-.custom-radio-card-checked {
-  background-color: var(--color-primary-light-1);
-}
-
-.custom-radio-card:hover .custom-radio-card-title,
-.custom-radio-card-checked .custom-radio-card-title {
-  color: rgb(var(--primary-6));
-}
-
-.custom-radio-card-checked .custom-radio-card-mask-dot {
-  background-color: rgb(var(--primary-6));
-}
-</style>
+<style scoped></style>

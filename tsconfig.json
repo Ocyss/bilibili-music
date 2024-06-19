@@ -22,7 +22,10 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "types": [
+      "@arco-design/web-vue/es/components"
+    ]
   },
   "include": [
     "src/**/*.ts",

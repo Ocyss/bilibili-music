@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { fromData } from "@/data";
+import Btn from "@/components/btn.vue";
+
+const invalidFileNameRegex = /[<>:"/\\|?*]/g;
 onMounted(() => {
   fromData.title = `${fromData.data?.music_title}-${fromData.videoData?.owner.name}`;
   fromData.author = `${fromData.videoData?.owner.name}(原:${fromData.data?.origin_artist})`;
-  fromData.file = `${fromData.title}.m4a`;
+  fromData.file = `${fromData.title.replaceAll(invalidFileNameRegex, "")}.wav`;
 });
 </script>
 
@@ -29,9 +32,11 @@ onMounted(() => {
       <a-form-item label="下载文件名">
         <a-input v-model="fromData.file" />
       </a-form-item>
-      <a-form-item>
-        <a-button @click="$emit('next')">下一步</a-button>
-      </a-form-item>
+      <Btn
+        :prev="{ disabled: true }"
+        @next="$emit('next')"
+        @prev="$emit('prev')"
+      />
     </a-form>
   </a-spin>
 </template>
