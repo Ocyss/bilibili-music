@@ -1,0 +1,89 @@
+name: Main
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+  #schedule:
+  #  - cron: "30 0 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [21]
+    outputs:
+      current_time: ${{ steps.current_time.outputs.current_time }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Get current time
+        id: current_time
+        run: echo "current_time=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Set Release Environment
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "VITE_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "VITE_RELEASE_MODE=release" >> $GITHUB_ENV
+
+      - name: Set Prerelease Environment
+        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          echo "VITE_VERSION=${{ steps.current_time.outputs.current_time }}.alpha" >> $GITHUB_ENV
+          echo "VITE_RELEASE_MODE=alpha" >> $GITHUB_ENV
+
+      - name: Watch Environment
+        run: echo "version=$VITE_VERSION,mode=$VITE_RELEASE_MODE"
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: ls dist
+        run: ls -la dist/*
+
+      - name: Release
+        uses: softprops/action-gh-release@v2.0.4
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          fail_on_unmatched_files: true
+          files: dist/**
+
+      - name: Prerelease
+        uses: softprops/action-gh-release@v2.0.4
+        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: ${{needs.build.outputs.current_time}}
+          tag_name: ${{needs.build.outputs.current_time}}
+          fail_on_unmatched_files: true
+          prerelease: true
+          files: dist/**
