@@ -17,6 +17,7 @@ const onChange = (v: (string | number | boolean)[]) => {
     subtitle.value = [];
   }
 };
+const error = ref("");
 
 onMounted(() => {
   if (!fromData.videoData) return;
@@ -54,7 +55,7 @@ onMounted(() => {
       console.log(_subtitles);
     })
     .catch((err) => {
-      console.log(err);
+      error.value = err.message;
     });
 });
 </script>
@@ -64,14 +65,20 @@ onMounted(() => {
     :loading="
       !fromData.data ||
       !fromData.playerData ||
-      fromData.playerData.subtitle.subtitles.length < 1
+      (fromData.playerData.subtitle.subtitles.length < 1 && !error)
     "
   >
     <a-form auto-label-width>
+      <a-result
+        v-if="error"
+        status="error"
+        :title="error"
+        subtitle="请查看视频是否有字幕,包括AI字幕,如果没有,请跳过"
+      />
       <a-checkbox-group
         v-model="subtitle"
         @change="onChange"
-        v-if="fromData.playerData"
+        v-else-if="fromData.playerData"
       >
         <template
           v-for="item in fromData.playerData.subtitle.subtitles"

@@ -23,6 +23,7 @@ onMounted(() => {
   const url = covers?.[0]?.url;
   if (url) cover.value = [url];
 });
+
 const onChange = (v: (string | number | boolean)[]) => {
   const val = v.pop();
   if (val) {

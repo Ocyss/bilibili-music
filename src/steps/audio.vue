@@ -1,16 +1,15 @@
 <script lang="ts" setup>
 import { fromData } from "@/data";
 import { request } from "@/utils/requests";
-import { GM_download } from "$";
 import audiobufferToBlob from "audiobuffer-to-blob";
 import * as biliMusic from "@ocyss/bilibili-music-backend";
 import Btn from "@/components/btn.vue";
-
+import FileSaver from "file-saver";
 const audioCtx = new AudioContext();
 const steps = [
   "获取音频",
   "下载音频",
-  "解码音频",
+  "解码音频\n可能出现假死,耐心等待解码耗时长",
   "下载封面",
   "开始内嵌",
   "准备下载",
@@ -18,16 +17,16 @@ const steps = [
 const stepIndex = ref(0);
 const error = ref<string | null>();
 
-const url = ref("");
+const fileBlob = ref();
 const status = computed(() =>
-  error.value ? "error" : url.value ? "success" : "null"
+  error.value ? "error" : fileBlob.value ? "success" : "null"
 );
 
-function main(auto = true) {
+function main() {
   const avid = fromData.playerData?.aid;
   const cid = fromData.playerData?.cid;
   error.value = null;
-  url.value = "";
+  fileBlob.value = null;
   request
     .get({
       url: `https://api.bilibili.com/x/player/playurl?qn=120&otype=json&fourk=1&fnver=0&fnval=4048&avid=${avid}&cid=${cid}`,
@@ -99,33 +98,16 @@ function main(auto = true) {
         layric: layric?.data?.body ?? [],
       });
       stepIndex.value++;
-      url.value = URL.createObjectURL(uint8ArrayToBlob(res, "audio/wav"));
-      if (auto) download();
+      fileBlob.value = uint8ArrayToBlob(res, "audio/wav");
     });
 }
 
-function download() {
-  if (!url.value) return;
-  GM_download({
-    url: url.value,
-    name: fromData.file ?? "bilibili_music.wav",
-    onload: () => {
-      console.log("ok");
-    },
-    onerror: (e) => {
-      console.log("err", e);
-    },
-    ontimeout: () => {
-      console.log("ontimeouterr");
-    },
-    onprogress: (e) => {
-      console.log("onprogresserr", e);
-    },
-  });
-}
+const download = () => {
+  FileSaver.saveAs(fileBlob.value, fromData.file ?? "bilibili_music.wav");
+};
 
 onMounted(() => {
-  main(false);
+  main();
 });
 
 function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
@@ -184,7 +166,7 @@ function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
     <Btn
       @prev="$emit('prev')"
       @next="main"
-      :next="{ disabled: !url }"
+      :next="{ disabled: !fileBlob }"
       nextLabel="重试"
     />
   </div>

@@ -12,12 +12,14 @@
   "dependencies": {
     "@ocyss/bilibili-music-backend": "^0.1.0",
     "audiobuffer-to-blob": "^1.0.2",
+    "file-saver": "^2.0.5",
     "js-base64": "^3.7.7",
     "vue": "^3.4.27"
   },
   "devDependencies": {
     "@arco-design/web-vue": "^2.55.3",
     "@arco-plugins/vite-vue": "^1.4.5",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20.14.2",
     "@vitejs/plugin-vue": "^5.0.4",
     "typescript": "^5.4.5",
