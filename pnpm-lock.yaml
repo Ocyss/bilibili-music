@@ -14,6 +14,9 @@ importers:
       audiobuffer-to-blob:
         specifier: ^1.0.2
         version: 1.0.2
+      js-base64:
+        specifier: ^3.7.7
+        version: 3.7.7
       vue:
         specifier: ^3.4.27
         version: 3.4.27(typescript@5.4.5)
@@ -743,6 +746,9 @@ packages:
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
+
+  js-base64@3.7.7:
+    resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -1747,6 +1753,8 @@ snapshots:
   isarray@0.0.1: {}
 
   isexe@2.0.0: {}
+
+  js-base64@3.7.7: {}
 
   js-tokens@4.0.0: {}
 

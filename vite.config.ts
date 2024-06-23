@@ -1,6 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
-import monkey, { cdn } from "vite-plugin-monkey";
+import monkey, { cdn, util } from "vite-plugin-monkey";
 import { vitePluginForArco } from "@arco-plugins/vite-vue";
 import process from "process";
 import path from "path";
@@ -56,16 +56,38 @@ export default defineConfig(() => {
           homepage: "https://github.com/Ocyss/bilibili-music",
           match: ["https://www.bilibili.com/video/*"],
           connect: ["bilibili.com", "hdslb.com", "mxnzp.com", "bilivideo.com"],
+          resource: {
+            bilibili_music_backend_bg:
+              "https://fastly.jsdelivr.net/npm/@ocyss/bilibili-music-backend@latest/bilibili_music_backend_bg.wasm",
+          },
         },
         build: {
           externalGlobals: {
-            vue: cdn.jsdelivr("Vue", "dist/vue.global.prod.js"),
+            vue: cdn
+              .jsdelivr("Vue", "dist/vue.global.prod.js")
+              .concat(util.dataUrl(";window.Vue=Vue;")),
+            "@arco-design/web-vue": cdn.jsdelivr(
+              "ArcoVue",
+              "dist/arco-vue.min.js"
+            ),
           },
         },
         server: {
           prefix: false,
         },
       }),
+      {
+        name: "wasm-cdn",
+        renderChunk(code) {
+          let tempCode = code;
+          const regx = new RegExp(/(__vite__wasmUrl = .*;)/);
+          tempCode = code.replace(
+            regx,
+            `__vite__wasmUrl = _GM_getResourceURL("bilibili_music_backend_bg");`
+          );
+          return tempCode;
+        },
+      },
     ],
     resolve: {
       alias: {

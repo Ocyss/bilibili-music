@@ -12,6 +12,7 @@
   "dependencies": {
     "@ocyss/bilibili-music-backend": "^0.1.0",
     "audiobuffer-to-blob": "^1.0.2",
+    "js-base64": "^3.7.7",
     "vue": "^3.4.27"
   },
   "devDependencies": {

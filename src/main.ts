@@ -3,8 +3,10 @@ import elmGetter from "./utils/elmGetter";
 import { createApp } from "vue";
 import "./style.css";
 import App from "./App.vue";
-import { GM_registerMenuCommand } from "$";
+import { GM_getResourceURL, GM_registerMenuCommand } from "$";
 import { defaultData } from "./data";
+
+GM_getResourceURL("bilibili_music_backend_bg");
 
 const main = () => {
   const el = document.createElement("div");
