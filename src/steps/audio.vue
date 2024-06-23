@@ -173,6 +173,9 @@ function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
 </template>
 
 <style scoped>
+* {
+  white-space: pre-wrap;
+}
 .audio {
   display: flex;
   align-items: center;
