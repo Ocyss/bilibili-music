@@ -11,10 +11,22 @@
 - **标签和元数据**: 自动添加标签（Tags）和元数据到下载的音频文件。
 - **歌词嵌入**: 支持将AI字幕当作歌词嵌入到音频文件中。
 
+## 预览图
+
+- 椒盐音乐(安卓)
+[![pkrWXVS.md.jpg](https://s21.ax1x.com/2024/06/23/pkrWXVS.md.jpg)](https://imgse.com/i/pkrWXVS)
+
+- MusicPlayer2(Windows)
+[![pkrWjUg.md.png](https://s21.ax1x.com/2024/06/23/pkrWjUg.md.png)](https://imgse.com/i/pkrWjUg)
+
+- 下载页面
+[![pkrWLb8.md.png](https://s21.ax1x.com/2024/06/23/pkrWLb8.md.png)](https://imgse.com/i/pkrWLb8)
+
 ## 已知问题
 
 1. 使用了`WASM`技术,低版本浏览器可能会导致下载失败。
-2. 没字幕会卡死
+2. 不同应用程序读取歌词的逻辑各不相同,无法确定是否支持。
+3. 转码音频页面卡死
 
 ## TODO
 
