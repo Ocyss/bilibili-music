@@ -52,7 +52,12 @@ onMounted(() => {
       subtitles.value = _subtitles;
       if (fromData.playerData)
         fromData.playerData.subtitle.subtitles = _subtitles;
-      console.log(_subtitles);
+      if (_subtitles.length > 0) {
+        const val = _subtitles[0].id_str;
+        fromData.lyricsId = val;
+        subtitle.value = [val];
+      }
+      // console.log(_subtitles);
     })
     .catch((err) => {
       error.value = err.message;
@@ -80,10 +85,7 @@ onMounted(() => {
         @change="onChange"
         v-else-if="fromData.playerData"
       >
-        <template
-          v-for="item in fromData.playerData.subtitle.subtitles"
-          :key="item.id"
-        >
+        <template v-for="item in subtitles" :key="item.id">
           <a-checkbox :value="item.id_str">
             <template #checkbox="{ checked }">
               <a-space
