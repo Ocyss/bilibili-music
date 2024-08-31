@@ -21,7 +21,10 @@ onMounted(() => {
     url: fromData.videoData?.owner.face,
   });
   const url = covers?.[0]?.url;
-  if (url) cover.value = [url];
+  if (url) {
+    fromData.coverUrl = url.toString();
+    cover.value = [url];
+  }
 });
 
 const onChange = (v: (string | number | boolean)[]) => {
@@ -38,7 +41,7 @@ const onChange = (v: (string | number | boolean)[]) => {
 
 <template>
   <a-spin :loading="!fromData.data || covers.length !== 3">
-    <a-form auto-label-width>
+    <a-form auto-label-width :model="{}">
       <a-checkbox-group :model-value="cover" @change="onChange">
         <template v-for="item in covers" :key="item.label">
           <a-checkbox :value="item.url">

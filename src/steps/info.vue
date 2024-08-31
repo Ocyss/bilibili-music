@@ -12,7 +12,7 @@ onMounted(() => {
 
 <template>
   <a-spin :loading="!fromData.data">
-    <a-form auto-label-width>
+    <a-form auto-label-width :model="{}">
       <a-form-item label="音乐名">
         <a-input readonly :model-value="fromData.data?.music_title" />
       </a-form-item>

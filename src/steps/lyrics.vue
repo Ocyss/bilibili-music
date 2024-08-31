@@ -68,7 +68,7 @@ onMounted(() => {
       (fromData.playerData.subtitle.subtitles.length < 1 && !error)
     "
   >
-    <a-form auto-label-width>
+    <a-form auto-label-width :model="{}">
       <a-result
         v-if="error"
         status="error"

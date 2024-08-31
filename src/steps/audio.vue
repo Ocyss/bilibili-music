@@ -19,7 +19,7 @@ const error = ref<string | null>();
 
 const fileBlob = ref();
 const status = computed(() =>
-  error.value ? "error" : fileBlob.value ? "success" : "null"
+  error.value ? "error" : fileBlob.value ? "success" : null
 );
 
 function main() {
@@ -88,7 +88,7 @@ function main() {
       const layric = fromData.playerData?.subtitle.subtitles.find(
         (item) => item.id_str === fromData.lyricsId
       );
-      const res = biliMusic.add_tag(await blobToUint8Array(blob), {
+      const option: biliMusic.AddTagOption = {
         author: fromData.author,
         title: fromData.title,
         album: fromData.data?.album ?? "",
@@ -96,7 +96,9 @@ function main() {
         cover: new Uint8Array(imgBuf),
         cover_mime: "image/jpeg",
         layric: layric?.data?.body ?? [],
-      });
+      };
+      console.log("开始内嵌", { data: fromData, option });
+      const res = biliMusic.add_tag(await blobToUint8Array(blob), option);
       stepIndex.value++;
       fileBlob.value = uint8ArrayToBlob(res, "audio/wav");
     });
@@ -135,7 +137,7 @@ function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
       :status="status"
       :title="error ?? `${stepIndex + 1}/${steps.length}:${steps[stepIndex]}`"
     >
-      <template #icon v-if="status === 'null'">
+      <template #icon v-if="status === null">
         <div class="loader">
           <svg class="circle-outer" viewBox="0 0 86 86">
             <circle class="back" cx="43" cy="43" r="40"></circle>

@@ -151,10 +151,7 @@ fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        io::{Read, Write},
-    };
+    use std::{fs, io::Write};
 
     use crate::*;
     use wasm_bindgen_test::*;
