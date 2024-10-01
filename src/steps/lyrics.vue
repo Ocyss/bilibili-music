@@ -66,13 +66,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-spin
-    :loading="
-      !fromData.data ||
-      !fromData.playerData ||
-      (fromData.playerData.subtitle.subtitles.length < 1 && !error)
-    "
-  >
+  <a-spin :loading="!fromData.data || (!fromData.playerData && !error)">
     <a-form auto-label-width :model="{}">
       <a-result
         v-if="error"

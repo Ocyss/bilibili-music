@@ -39,6 +39,8 @@ export function request<TContext, TResponseType extends ResponseType = "json">({
   onStream = () => {},
   cookie = true,
 }: RequestArgs<TContext, TResponseType>) {
+  headers["Referer"] = window.location.href;
+  headers["User-Agent"] = window.navigator.userAgent;
   return new Promise<TContext>(async (resolve, reject) => {
     const ck = cookie
       ? await new Promise<ResolvedReturnType<(typeof GM_cookie)["list"]>>(
@@ -51,6 +53,7 @@ export function request<TContext, TResponseType extends ResponseType = "json">({
             })
         )
       : [];
+    console.log("music-log/requests", { url, data, method, headers, ck });
     const abort = GM_xmlhttpRequest<TContext, TResponseType>({
       method,
       url,
