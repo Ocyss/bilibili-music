@@ -96,11 +96,12 @@ function main() {
         host: location.href.split("?")[0],
         cover: new Uint8Array(imgBuf),
         cover_mime: "image/jpeg",
-        layric: fromData.lyricsData ?? [],
+        lyrics: fromData.lyricsData ?? [],
+        clip_ranges: fromData.clipRanges ?? [],
       };
 
       console.log("开始内嵌", { data: fromData, option });
-      const res = biliMusic.add_tag(await blobToUint8Array(blob), option);
+      const res = biliMusic.main(await blobToUint8Array(blob), option);
       stepIndex.value++;
       fileBlob.value = uint8ArrayToBlob(res, "audio/wav");
     });

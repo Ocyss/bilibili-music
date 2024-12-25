@@ -65,7 +65,7 @@ export default defineConfig(() => {
           ],
           resource: {
             bilibili_music_backend_bg:
-              "https://fastly.jsdelivr.net/npm/@ocyss/bilibili-music-backend@latest/bilibili_music_backend_bg.wasm",
+              "https://fastly.jsdelivr.net/npm/@ocyss/bilibili-music-backend@0.1.2/bilibili_music_backend_bg.wasm",
           },
         },
         build: {

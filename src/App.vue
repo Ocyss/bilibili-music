@@ -3,7 +3,7 @@ import { onMounted, reactive, ref } from "vue";
 import StepAudio from "@/steps/audio.vue";
 import StepCover from "@/steps/cover.vue";
 import StepInfo from "@/steps/info.vue";
-import StepMontage from "@/steps/montage.vue";
+import StepMontage from "@/steps/clip.vue";
 import StepLyrics from "@/steps/lyrics.vue";
 import { fromData, reset } from "./data";
 import { clone } from "./utils/deepmerge";

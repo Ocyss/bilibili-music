@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Audio: typeof import('./src/steps/audio.vue')['default']
     Btn: typeof import('./src/components/btn.vue')['default']
+    Clip: typeof import('./src/steps/clip.vue')['default']
     Cover: typeof import('./src/steps/cover.vue')['default']
     Info: typeof import('./src/steps/info.vue')['default']
     Lyrics: typeof import('./src/steps/lyrics.vue')['default']

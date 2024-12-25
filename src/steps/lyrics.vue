@@ -41,7 +41,7 @@ function next() {
     fromData.lyricsData = subtitleEdit.value.data._editBody
       .split("\n")
       .map((item, index) => [
-        subtitleEdit.value!.data!.body[index].from * 1000,
+        Math.round(subtitleEdit.value!.data!.body[index].from * 1000),
         item,
       ]);
   } else {

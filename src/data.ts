@@ -26,6 +26,7 @@ export const defaultData = {
   err: null as any,
   coverUrl: null as null | string,
   lyricsData: null as null | Array<[number, string]>,
+  clipRanges: null as null | Array<[number, number]>,
   videoData: null as VideoData | null,
   playerData: null as PlayerData | null,
   videoParse: null as VideoParse | null,

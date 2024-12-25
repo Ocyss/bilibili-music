@@ -296,6 +296,16 @@ const handleTimelineClick = (event: MouseEvent) => {
     video.currentTime = newTime;
   }
 };
+
+const emits = defineEmits(["next"]);
+
+function next() {
+  fromData.clipRanges = deletedSections.value.map((section) => [
+    Math.round(section.start * 1000),
+    Math.round(section.end * 1000),
+  ]);
+  emits("next");
+}
 </script>
 
 <template>
@@ -347,6 +357,7 @@ const handleTimelineClick = (event: MouseEvent) => {
           @mousemove="handleTimelineMouseMove"
           @mouseleave="handleTimelineMouseLeave"
           @mousedown="handleTimelineMouseDown"
+          @click="handleTimelineClick"
         >
           <div class="timeline-inner">
             <div
@@ -399,7 +410,7 @@ const handleTimelineClick = (event: MouseEvent) => {
           </a-list-item>
         </a-list>
       </a-spin>
-      <Btn prevLabel="试听" @next="$emit('next')" @prev="startAudition" />
+      <Btn prevLabel="试听" @next="next" @prev="startAudition" />
     </div>
   </a-spin>
 </template>

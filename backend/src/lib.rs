@@ -18,7 +18,8 @@ pub struct AddTagOptionRs {
     pub host: String,
     pub cover: Vec<u8>,
     pub cover_mime: String,
-    pub layric: Vec<(u32, String)>,
+    pub lyrics: Vec<(u32, String)>,
+    pub clip_ranges: Vec<(u32, u32)>,
 }
 
 #[wasm_bindgen(typescript_custom_section)]
@@ -30,7 +31,8 @@ interface AddTagOption {
     host: string;
     cover: Uint8Array;
     cover_mime: string;
-    layric: Array<[number, string]>;
+    lyrics: Array<[number, string]>;
+    clip_ranges: Array<[number, number]>;
 }
 "#;
 
@@ -54,21 +56,22 @@ const MILLISECONDS_PER_MINUTE: u32 = 60000;
 const MILLISECONDS_PER_SECOND: u32 = 1000;
 
 #[wasm_bindgen]
-pub fn add_tag(mut file: Vec<u8>, _option: AddTagOption) -> Result<Vec<u8>, JsValue> {
+pub fn main(file: Vec<u8>, _option: AddTagOption) -> Result<Vec<u8>, JsValue> {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
     let out_lenght = file.len();
     let option = serde_wasm_bindgen::from_value::<AddTagOptionRs>(_option.into())?;
 
-    let mut out_tag = Vec::new();
-    set_tag(&mut out_tag, option)?;
+    let file = music_main(file, option)?;
 
-    file.write_all(&out_tag).unwrap();
+    // file.write_all(&out_tag).unwrap();
 
     console_log!("修改前: {}, 修改后: {}", out_lenght, file.len());
     Ok(file)
 }
 
-fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
+fn music_main(file: Vec<u8>, option: AddTagOptionRs) -> Result<Vec<u8>, JsValue> {
+    let (mut file, lyrics) = clip_wav(&file, &option.clip_ranges, &option.lyrics)?;
+
     let mut tag = Tag::new();
     tag.set_album(option.album);
     tag.set_artist(&option.author);
@@ -76,23 +79,23 @@ fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
     tag.set_title(option.title);
     tag.add_frame(Frame::link("WOAS", option.host));
 
-    let mut lyrics: Vec<String> = Vec::new();
+    let mut lyrics2: Vec<String> = Vec::new();
 
-    lyrics.push("[offset:0]".to_owned());
+    lyrics2.push("[offset:0]".to_owned());
 
-    for item in &option.layric {
+    for item in &lyrics {
         let total_ms = item.0;
         let mins = (total_ms % MILLISECONDS_PER_HOUR) / MILLISECONDS_PER_MINUTE;
         let secs = (total_ms % MILLISECONDS_PER_MINUTE) / MILLISECONDS_PER_SECOND;
         let ms = total_ms % MILLISECONDS_PER_SECOND;
 
-        lyrics.push(format!("[{:02}:{:02}.{:03}] {}", mins, secs, ms, item.1));
+        lyrics2.push(format!("[{:02}:{:02}.{:03}] {}", mins, secs, ms, item.1));
     }
 
     tag.add_frame(frame::Lyrics {
         lang: "zho".to_owned(),
         description: "".to_owned(),
-        text: lyrics.join("\n"),
+        text: lyrics2.join("\n"),
     });
 
     tag.add_frame(frame::SynchronisedLyrics {
@@ -100,7 +103,7 @@ fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
         timestamp_format: frame::TimestampFormat::Ms,
         content_type: frame::SynchronisedLyricsType::Lyrics,
         description: "".to_owned(),
-        content: option.layric,
+        content: lyrics,
     });
 
     tag.add_frame(Picture {
@@ -121,11 +124,128 @@ fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
     let mut out_tag = Vec::new();
     tag.write_to(&mut out_tag, Version::Id3v23).unwrap();
 
-    out.write_all(b"id3 ").unwrap();
-    out.write_all(&(out_tag.len() as u32).to_le_bytes())
+    // let mut out = Vec::new();
+    file.write_all(b"id3 ").unwrap();
+    file.write_all(&(out_tag.len() as u32).to_le_bytes())
         .unwrap();
-    out.write_all(&out_tag).unwrap();
-    Ok(())
+    file.write_all(&out_tag).unwrap();
+
+    // file.write_all(&out).unwrap();
+    Ok(file)
+}
+
+fn clip_wav(
+    wav_data: &[u8],
+    ranges: &[(u32, u32)],
+    lyrics: &[(u32, String)],
+) -> Result<(Vec<u8>, Vec<(u32, String)>), JsValue> {
+    if ranges.is_empty() {
+        return Ok((wav_data.to_vec(), lyrics.to_vec()));
+    }
+    const HEADER_SIZE: usize = 44;
+
+    if wav_data.len() < HEADER_SIZE {
+        return Err(JsValue::from_str("无效的WAV文件"));
+    }
+
+    // 解析WAV头部信息
+    let channels = u16::from_le_bytes([wav_data[22], wav_data[23]]);
+    let sample_rate = u32::from_le_bytes([wav_data[24], wav_data[25], wav_data[26], wav_data[27]]);
+    let bits_per_sample = u16::from_le_bytes([wav_data[34], wav_data[35]]);
+    let bytes_per_sample = (bits_per_sample / 8) as u32;
+
+    // 计算每毫秒的字节数
+    let bytes_per_ms = sample_rate * channels as u32 * bytes_per_sample / 1000;
+
+    // 对时间范围进行排序和合并
+    let mut sorted_ranges = ranges.to_vec();
+    sorted_ranges.sort_by_key(|r| r.0);
+    let merged_ranges = merge_ranges(sorted_ranges);
+
+    // 计算时间偏移量并调整歌词
+    let mut adjusted_lyrics: Vec<(u32, String)> = Vec::new();
+
+    for lyric in lyrics {
+        let mut time_offset = 0;
+        let mut should_add = true;
+
+        // 计算当前歌词应该减去的时间
+        for range in &merged_ranges {
+            if lyric.0 >= range.0 && lyric.0 <= range.1 {
+                // 如果歌词在删除区间内,跳过这个歌词
+                should_add = false;
+                break;
+            } else if lyric.0 > range.1 {
+                // 如果歌词在删除区间之后，减去整个区间的长度
+                time_offset += range.1 - range.0;
+            }
+        }
+
+        // 只添加不在删除区间内的歌词
+        if should_add {
+            adjusted_lyrics.push((lyric.0 - time_offset, lyric.1.clone()));
+        }
+    }
+
+    // 创建新的WAV文件
+    let mut result = Vec::new();
+    result.extend_from_slice(&wav_data[..HEADER_SIZE]); // 复制头部
+
+    let mut last_end = 0;
+
+    // 处理每个保留的片段
+    for range in &merged_ranges {
+        let start_pos = HEADER_SIZE + (range.0 * bytes_per_ms) as usize;
+        let end_pos = HEADER_SIZE + (range.1 * bytes_per_ms) as usize;
+
+        if end_pos > wav_data.len() {
+            return Err(JsValue::from_str("剪辑范围超出文件长度"));
+        }
+
+        // 复制当前删除范围之前的数据
+        if last_end < range.0 {
+            let copy_start = HEADER_SIZE + (last_end * bytes_per_ms) as usize;
+            result.extend_from_slice(&wav_data[copy_start..start_pos]);
+        }
+
+        last_end = range.1;
+    }
+
+    if last_end * (bytes_per_ms as u32) < (wav_data.len() - HEADER_SIZE) as u32 {
+        let copy_start = HEADER_SIZE + (last_end * bytes_per_ms) as usize;
+        result.extend_from_slice(&wav_data[copy_start..]);
+    }
+
+    // 更新文件大小
+    let new_size = (result.len() - 8) as u32;
+    result[4..8].copy_from_slice(&new_size.to_le_bytes());
+
+    // 更新数据块大小
+    let new_data_size = (result.len() - HEADER_SIZE) as u32;
+    result[40..44].copy_from_slice(&new_data_size.to_le_bytes());
+
+    Ok((result, adjusted_lyrics))
+}
+
+fn merge_ranges(ranges: Vec<(u32, u32)>) -> Vec<(u32, u32)> {
+    if ranges.is_empty() {
+        return ranges;
+    }
+
+    let mut merged = Vec::new();
+    let mut current = ranges[0].clone();
+
+    for range in ranges.into_iter().skip(1) {
+        if range.0 <= current.1 {
+            current.1 = current.1.max(range.1);
+        } else {
+            merged.push(current);
+            current = range;
+        }
+    }
+    merged.push(current);
+
+    merged
 }
 
 #[cfg(test)]
@@ -141,7 +261,7 @@ mod tests {
         let (in_file, opt) = test_data();
         let in_len = in_file.len();
         let opt = serde_wasm_bindgen::to_value(&opt).unwrap();
-        let out_file = add_tag(in_file, AddTagOption { obj: opt }).unwrap();
+        let out_file = main(in_file, AddTagOption { obj: opt }).unwrap();
         self::console_log!("res: {:?}", out_file);
         let out_len = out_file.len();
         self::console_log!("in len: {}, out len: {}", in_len, out_len);
@@ -149,19 +269,19 @@ mod tests {
     }
 
     #[test]
-    fn test_rs() {
+    fn test_rs_tag() {
         let (in_file, option) = test_data();
+        let in_len = in_file.len();
 
-        let mut out_file = fs::File::create("./testdata/test_out.wav").unwrap();
-        let mut out_tag = Vec::new();
-        set_tag(&mut out_tag, option).unwrap();
+        let mut out_file = fs::File::create("./testdata/test_out_tag.wav").unwrap();
 
-        out_file.write_all(&in_file).unwrap();
-        out_file.write_all(&out_tag).unwrap();
-        let (in_len, out_len) = (in_file.len(), out_file.metadata().unwrap().len() as usize);
+        let file = music_main(in_file, option).unwrap();
+
+        out_file.write_all(&file).unwrap();
+
+        let out_len = out_file.metadata().unwrap().len() as usize;
 
         println!("in len: {}, out len: {}", in_len, out_len);
-        assert!(in_len < out_len, "in len: {}, out len: {}", in_len, out_len);
         assert!(
             in_len == 2355244 && out_len == 2376766,
             "in len[2355244]: {}, out len[2376766]: {}",
@@ -170,7 +290,31 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_rs_clip() {
+        let (in_file, mut option) = test_data();
+        option.clip_ranges = vec![(0, 3000), (7000, 9000)];
+
+        let in_len = in_file.len();
+
+        let mut out_file = fs::File::create("./testdata/test_out_clip.wav").unwrap();
+        let file = music_main(in_file, option).unwrap();
+
+        out_file.write_all(&file).unwrap();
+
+        let out_len = out_file.metadata().unwrap().len() as usize;
+
+        println!("in len: {}, out len: {}", in_len, out_len);
+        assert!(
+            in_len == 2355244 && out_len == 1416328,
+            "in len[2355244]: {}, out len[1416328]: {}",
+            in_len,
+            out_len
+        );
+    }
+
     fn test_data() -> (Vec<u8>, AddTagOptionRs) {
+        // TODO: 更优的测试片段，需要有歌词对应
         let cover_file = include_bytes!("../testdata/cover.jpeg").to_vec();
         let in_file = include_bytes!("../testdata/music_13s.wav").to_vec();
         let mut lyrics = Vec::<(u32, String)>::new();
@@ -180,13 +324,14 @@ mod tests {
             lyrics.push((from, format!("test:{}-{}", from, to)));
         }
         let opt = AddTagOptionRs {
+            clip_ranges: vec![],
             author: "Ocyss".to_string(),
             title: "add tag test".to_string(),
             album: "tests".to_string(),
             host: "https://github.com/ocyss".to_string(),
             cover: cover_file,
             cover_mime: "image/jpeg".to_string(),
-            layric: lyrics,
+            lyrics: lyrics,
         };
         return (in_file, opt);
     }
