@@ -89,3 +89,13 @@
   .arco-steps-item-tail::after {
   background-color: var(--brand_blue) !important;
 }
+
+.arco-btn.arco-btn-primary:hover {
+  filter: brightness(0.9) !important;
+  transition: all 0.3s ease !important;
+}
+
+.arco-btn.arco-btn-primary:disabled {
+  filter: brightness(1.3) !important;
+  transition: all 0.3s ease !important;
+}

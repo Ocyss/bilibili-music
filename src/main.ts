@@ -11,7 +11,7 @@ GM_getResourceURL("bilibili_music_backend_bg");
 const main = () => {
   const el = document.createElement("div");
   el.id = "bilibili-music-vue";
-  el.style.display = "none";
+  // el.style.display = "none";
   document.body.appendChild(el);
   const app = createApp(App);
   app.mount(el);
@@ -35,6 +35,7 @@ window._bilibili_music_open = main;
 declare global {
   interface Window {
     _bilibili_music_fromData: typeof defaultData;
+    _bilibili_music_userConfig: any;
     _bilibili_music_open: () => void;
   }
 }

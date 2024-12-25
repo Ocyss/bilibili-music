@@ -5,6 +5,8 @@ import audiobufferToBlob from "audiobuffer-to-blob";
 import * as biliMusic from "@ocyss/bilibili-music-backend";
 import Btn from "@/components/btn.vue";
 import FileSaver from "file-saver";
+import { GM_setValue } from "$";
+
 const audioCtx = new AudioContext();
 const steps = [
   "获取音频",
@@ -23,6 +25,7 @@ const status = computed(() =>
 );
 
 function main() {
+  stepIndex.value = 0;
   const avid = fromData.playerData?.aid;
   const cid = fromData.playerData?.cid;
   error.value = null;
@@ -85,9 +88,7 @@ function main() {
       }
 
       stepIndex.value++;
-      const layric = fromData.playerData?.subtitle.subtitles.find(
-        (item) => item.id_str === fromData.lyricsId
-      );
+
       const option: biliMusic.AddTagOption = {
         author: fromData.author,
         title: fromData.title,
@@ -95,8 +96,9 @@ function main() {
         host: location.href.split("?")[0],
         cover: new Uint8Array(imgBuf),
         cover_mime: "image/jpeg",
-        layric: layric?.data?.body ?? [],
+        layric: fromData.lyricsData ?? [],
       };
+
       console.log("开始内嵌", { data: fromData, option });
       const res = biliMusic.add_tag(await blobToUint8Array(blob), option);
       stepIndex.value++;
@@ -129,6 +131,10 @@ function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
 function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
   return new Blob([array], { type });
 }
+
+const saveDefault = () => {
+  GM_setValue("default_rule", JSON.parse(JSON.stringify(fromData.record)));
+};
 </script>
 
 <template>
@@ -165,6 +171,7 @@ function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
         </a-space>
       </template>
     </a-result>
+    <a-button @click="saveDefault">保存为默认规则</a-button>
     <Btn
       @prev="$emit('prev')"
       @next="main"

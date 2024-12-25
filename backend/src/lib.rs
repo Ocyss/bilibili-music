@@ -1,15 +1,12 @@
 extern crate wasm_bindgen;
-use std::{
-    io::{BufRead, Cursor, Write},
-    panic,
-};
+use std::{io::Write, panic};
 
 use wasm_bindgen::prelude::*;
 
 // use id3::frame::{Content, Picture, PictureType};
 use id3::{
     frame::{self, Picture, PictureType},
-    Content, Frame, Tag, TagLike, Version,
+    Frame, Tag, TagLike, Version,
 };
 use serde::{Deserialize, Serialize};
 
@@ -21,16 +18,7 @@ pub struct AddTagOptionRs {
     pub host: String,
     pub cover: Vec<u8>,
     pub cover_mime: String,
-    pub layric: Vec<LayricItemRs>,
-}
-#[derive(Serialize, Deserialize, Clone, Default)]
-pub struct LayricItemRs {
-    pub from: f64,
-    pub to: f64,
-    // pub sid: i64,
-    // pub location: i64,
-    pub content: String,
-    // pub music: i64,
+    pub layric: Vec<(u32, String)>,
 }
 
 #[wasm_bindgen(typescript_custom_section)]
@@ -42,16 +30,7 @@ interface AddTagOption {
     host: string;
     cover: Uint8Array;
     cover_mime: string;
-    layric: Array<LayricItem>;
-}
-
-interface LayricItem {
-    from: number;
-    to: number;
-    sid: number;
-    location: number;
-    content: string;
-    music: number;
+    layric: Array<[number, string]>;
 }
 "#;
 
@@ -59,8 +38,6 @@ interface LayricItem {
 extern "C" {
     #[wasm_bindgen(typescript_type = "AddTagOption")]
     pub type AddTagOption;
-    #[wasm_bindgen(typescript_type = "LayricItem")]
-    pub type LayricItem;
 
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
@@ -77,54 +54,55 @@ const MILLISECONDS_PER_MINUTE: u32 = 60000;
 const MILLISECONDS_PER_SECOND: u32 = 1000;
 
 #[wasm_bindgen]
-pub fn add_tag(file: Vec<u8>, _option: AddTagOption) -> Result<Vec<u8>, JsValue> {
+pub fn add_tag(mut file: Vec<u8>, _option: AddTagOption) -> Result<Vec<u8>, JsValue> {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
-    let mut out_file = file.clone();
+    let out_lenght = file.len();
     let option = serde_wasm_bindgen::from_value::<AddTagOptionRs>(_option.into())?;
 
     let mut out_tag = Vec::new();
     set_tag(&mut out_tag, option)?;
 
-    out_file.write_all(&out_tag).unwrap();
+    file.write_all(&out_tag).unwrap();
 
-    console_log!("修改前: {}, 修改后: {}", file.len(), out_file.len());
-    Ok(out_file)
+    console_log!("修改前: {}, 修改后: {}", out_lenght, file.len());
+    Ok(file)
 }
 
 fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
     let mut tag = Tag::new();
     tag.set_album(option.album);
-    tag.set_artist(option.author.clone());
+    tag.set_artist(&option.author);
     tag.set_text("TCOM", option.author);
     tag.set_title(option.title);
     tag.add_frame(Frame::link("WOAS", option.host));
-    let mut sync_lyrics: Vec<(u32, String)> = Vec::new();
+
     let mut lyrics: Vec<String> = Vec::new();
+
     lyrics.push("[offset:0]".to_owned());
-    for item in option.layric {
-        let total_ms = (item.from * 1000.) as u32;
+
+    for item in &option.layric {
+        let total_ms = item.0;
         let mins = (total_ms % MILLISECONDS_PER_HOUR) / MILLISECONDS_PER_MINUTE;
         let secs = (total_ms % MILLISECONDS_PER_MINUTE) / MILLISECONDS_PER_SECOND;
         let ms = total_ms % MILLISECONDS_PER_SECOND;
 
-        lyrics.push(format!(
-            "[{:02}:{:02}.{:03}] {}",
-            mins, secs, ms, item.content
-        ));
-        sync_lyrics.push((total_ms, item.content))
+        lyrics.push(format!("[{:02}:{:02}.{:03}] {}", mins, secs, ms, item.1));
     }
+
     tag.add_frame(frame::Lyrics {
         lang: "zho".to_owned(),
         description: "".to_owned(),
         text: lyrics.join("\n"),
     });
+
     tag.add_frame(frame::SynchronisedLyrics {
         lang: "zho".to_owned(),
         timestamp_format: frame::TimestampFormat::Ms,
         content_type: frame::SynchronisedLyricsType::Lyrics,
         description: "".to_owned(),
-        content: sync_lyrics,
+        content: option.layric,
     });
+
     tag.add_frame(Picture {
         mime_type: option.cover_mime,
         picture_type: PictureType::CoverFront,
@@ -137,6 +115,7 @@ fn set_tag(out: &mut Vec<u8>, option: AddTagOptionRs) -> Result<(), JsValue> {
         lang: "zho".to_owned(),
         description: "Bilibili🎶音乐姬".to_owned(), 
     });
+
     tag.set_text("TRSN", "bilibili.com");
 
     let mut out_tag = Vec::new();
@@ -160,10 +139,11 @@ mod tests {
     fn test_wsam() {
         wasm_bindgen_test_configure!(run_in_browser);
         let (in_file, opt) = test_data();
+        let in_len = in_file.len();
         let opt = serde_wasm_bindgen::to_value(&opt).unwrap();
-        let out_file = add_tag(in_file.clone(), AddTagOption { obj: opt }).unwrap();
+        let out_file = add_tag(in_file, AddTagOption { obj: opt }).unwrap();
         self::console_log!("res: {:?}", out_file);
-        let (in_len, out_len) = (in_file.len(), out_file.len());
+        let out_len = out_file.len();
         self::console_log!("in len: {}, out len: {}", in_len, out_len);
         assert!(in_len < out_len, "in len: {}, out len: {}", in_len, out_len);
     }
@@ -193,16 +173,11 @@ mod tests {
     fn test_data() -> (Vec<u8>, AddTagOptionRs) {
         let cover_file = include_bytes!("../testdata/cover.jpeg").to_vec();
         let in_file = include_bytes!("../testdata/music_13s.wav").to_vec();
-        let mut lyrics = Vec::new();
+        let mut lyrics = Vec::<(u32, String)>::new();
         for i in 0..10 {
             let i = i * 1024;
             let (from, to) = (4 + i, i + 1024);
-            lyrics.push(LayricItemRs {
-                from: from as f64 / 1000.,
-                to: to as f64 / 1000.,
-                content: format!("test:{}-{}", from, to),
-                ..Default::default()
-            });
+            lyrics.push((from, format!("test:{}-{}", from, to)));
         }
         let opt = AddTagOptionRs {
             author: "Ocyss".to_string(),

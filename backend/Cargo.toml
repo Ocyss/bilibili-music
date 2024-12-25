@@ -1,14 +1,14 @@
 [package]
 edition = "2021"
 name = "bilibili-music-backend"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["ocyss <bilimusic@ocyss.icu>"]
 description = "Bilibili🎶音乐姬 后端WASM程序"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Ocyss/bilibili-music"
 
 [profile.release]
-opt-level = "z" 
+opt-level = "z"
 lto = true
 codegen-units = 1
 strip = true
@@ -20,9 +20,9 @@ crate-type = ["cdylib"]
 [dependencies]
 console_error_panic_hook = "0.1.7"
 id3 = "1.13.1"
-serde = {version = "1.0.203", features = ["derive"]}
+serde = { version = "1.0.203", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
-wasm-bindgen = {version = "0.2.92"}
+wasm-bindgen = { version = "0.2.92" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.42"

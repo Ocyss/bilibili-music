@@ -55,7 +55,14 @@ export default defineConfig(() => {
           namespace: "https://github.com/Ocyss/bilibili-music",
           homepage: "https://github.com/Ocyss/bilibili-music",
           match: ["https://www.bilibili.com/video/*"],
-          connect: ["bilibili.com", "hdslb.com", "mxnzp.com", "bilivideo.com"],
+          connect: [
+            "bilibili.com",
+            "hdslb.com",
+            "mxnzp.com",
+            "bilivideo.com",
+            "www.hhlqilongzhu.cn",
+            "api.52vmy.cn",
+          ],
           resource: {
             bilibili_music_backend_bg:
               "https://fastly.jsdelivr.net/npm/@ocyss/bilibili-music-backend@latest/bilibili_music_backend_bg.wasm",

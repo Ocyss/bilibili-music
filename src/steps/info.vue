@@ -1,42 +1,146 @@
 <script lang="ts" setup>
 import { fromData } from "@/data";
 import Btn from "@/components/btn.vue";
+import { GM_getValue, GM_setValue } from "$";
+
+const emits = defineEmits(["next", "prev"]);
 
 const invalidFileNameRegex = /[<>:"/\\|?*]/g;
+
+const infoMaps = computed(() => [
+  fromData.videoData?.title || "",
+  fromData.videoData?.desc || "",
+  fromData.videoData?.owner.name || "",
+  fromData.data?.music_title || "",
+  fromData.data?.origin_artist || "",
+]);
+
+const titleSelects = ["4-3", "4-5", "1-3", "4", "1"];
+const authorSelects = ["3(原:5)", "3-5", "3", "5"];
+const fileSelects = ["4-3", "4-5", "1-3", "4", "1"];
+
+const infoRecord = {
+  title: "",
+  author: "",
+  file: "",
+};
+
+function next() {
+  fromData.record.format = infoRecord;
+  emits("next");
+}
+
+const handleSelect = (type: keyof typeof infoRecord, format: string) => {
+  GM_setValue(`${type}-format`, format);
+  infoRecord[type] = format;
+  const maps = infoMaps.value;
+  return format
+    .replaceAll("1", maps[0])
+    .replaceAll("2", maps[1])
+    .replaceAll("3", maps[2])
+    .replaceAll("4", maps[3])
+    .replaceAll("5", maps[4]);
+};
+
+const handleTitleSelect = (value: string) => {
+  fromData.title = handleSelect("title", value);
+};
+
+const handleAuthorSelect = (value: string) => {
+  fromData.author = handleSelect("author", value);
+};
+
+const handleFileSelect = (value: string) => {
+  const title = handleSelect("file", value);
+  fromData.file = `${title.replaceAll(invalidFileNameRegex, "")}.wav`;
+};
+
 onMounted(() => {
-  fromData.title = `${fromData.data?.music_title}-${fromData.videoData?.owner.name}`;
-  fromData.author = `${fromData.videoData?.owner.name}(原:${fromData.data?.origin_artist})`;
-  fromData.file = `${fromData.title.replaceAll(invalidFileNameRegex, "")}.wav`;
+  const titleFormat = GM_getValue(`title-format`, titleSelects[0]);
+  const authorFormat = GM_getValue(`author-format`, authorSelects[0]);
+  const fileFormat = GM_getValue(`file-format`, fileSelects[0]);
+
+  handleTitleSelect(titleFormat);
+  handleAuthorSelect(authorFormat);
+  handleFileSelect(fileFormat);
 });
 </script>
 
 <template>
   <a-spin :loading="!fromData.data">
     <a-form auto-label-width :model="{}">
-      <a-form-item label="音乐名">
-        <a-input readonly :model-value="fromData.data?.music_title" />
-      </a-form-item>
-      <a-form-item label="原唱">
-        <a-input readonly :model-value="fromData.data?.origin_artist" />
-      </a-form-item>
-      <a-form-item label="Up主">
-        <a-input readonly :model-value="fromData.videoData?.owner.name" />
-      </a-form-item>
+      <template v-if="fromData.videoData">
+        <a-form-item label="标题(1)">
+          <a-input v-model="fromData.videoData.title" />
+        </a-form-item>
+        <a-form-item label="简介(2)">
+          <a-textarea
+            v-model="fromData.videoData.desc"
+            :auto-size="{
+              minRows: 1,
+              maxRows: 3,
+            }"
+          />
+        </a-form-item>
+        <a-form-item label="Up主(3)">
+          <a-input v-model="fromData.videoData.owner.name" />
+        </a-form-item>
+      </template>
+      <template v-if="fromData.data">
+        <a-form-item label="音乐名(4)">
+          <a-input v-model="fromData.data.music_title" />
+        </a-form-item>
+        <a-form-item label="原唱(5)">
+          <a-input v-model="fromData.data.origin_artist" />
+        </a-form-item>
+      </template>
 
       <a-form-item label="内嵌标题">
         <a-input v-model="fromData.title" />
+        <a-dropdown @select="handleTitleSelect">
+          <a-button type="primary">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+          <template #content>
+            <a-doption v-for="item in titleSelects" :key="item">
+              {{ item }}
+            </a-doption>
+          </template>
+        </a-dropdown>
       </a-form-item>
       <a-form-item label="内嵌作者">
         <a-input v-model="fromData.author" />
+        <a-dropdown @select="handleAuthorSelect">
+          <a-button type="primary">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+          <template #content>
+            <a-doption v-for="item in authorSelects" :key="item">
+              {{ item }}
+            </a-doption>
+          </template>
+        </a-dropdown>
       </a-form-item>
       <a-form-item label="下载文件名">
         <a-input v-model="fromData.file" />
+        <a-dropdown @select="handleFileSelect">
+          <a-button type="primary">
+            <template #icon>
+              <icon-settings />
+            </template>
+          </a-button>
+          <template #content>
+            <a-doption v-for="item in fileSelects" :key="item">
+              {{ item }}
+            </a-doption>
+          </template>
+        </a-dropdown>
       </a-form-item>
-      <Btn
-        :prev="{ disabled: true }"
-        @next="$emit('next')"
-        @prev="$emit('prev')"
-      />
+      <Btn @next="next" @prev="$emit('prev')" />
     </a-form>
   </a-spin>
 </template>

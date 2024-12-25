@@ -165,6 +165,8 @@ interface SubtitleData {
   lang: string;
   version: string;
   body: Body[];
+  _editBody: string; // 手动补充
+  _lyricsBody: Array<[number, string]>; // 手动补充, ms: content 格式
 }
 
 interface Body {

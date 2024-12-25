@@ -10,8 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ocyss/bilibili-music-backend": "^0.1.0",
+    "@ocyss/bilibili-music-backend": "0.1.1",
     "audiobuffer-to-blob": "^1.0.2",
+    "diff": "^7.0.0",
     "file-saver": "^2.0.5",
     "js-base64": "^3.7.7",
     "vue": "^3.4.27"
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@arco-design/web-vue": "^2.55.3",
     "@arco-plugins/vite-vue": "^1.4.5",
+    "@types/diff": "^6.0.0",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20.14.2",
     "@vitejs/plugin-vue": "^5.0.4",
@@ -29,5 +31,6 @@
     "vite-plugin-monkey": "^4.0.0",
     "vite-plugin-wasm": "^3.3.0",
     "vue-tsc": "^2.0.19"
-  }
+  },
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }

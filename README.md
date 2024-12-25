@@ -11,13 +11,20 @@
 - **标签和元数据**: 自动添加标签（Tags）和元数据到下载的音频文件。
 - **歌词嵌入**: 支持将AI字幕当作歌词嵌入到音频文件中。
 
+### v0.0.4新增
+
+- **歌词工作台**: 支持编辑歌词，联网修正歌词，歌词样式调整
+- **音频工作台**: 简易的片段选择，去除不需要的片段
+- **脚本模板**: 根据预设一键下载音频，跳过繁琐步骤
+- **额外标签嵌入**: 支持更多标签，自定义内容嵌入
+
 ## 预览图
 
 - 椒盐音乐(安卓)
-[![pkrWXVS.md.jpg](https://s21.ax1x.com/2024/06/23/pkrWXVS.md.jpg)](https://imgse.com/i/pkrWXVS)
+[![pAXi28S.jpg](https://s21.ax1x.com/2024/12/21/pAXi28S.jpg)](https://imgse.com/i/pAXi28S)
 
 - MusicPlayer2(Windows)
-[![pkrWjUg.md.png](https://s21.ax1x.com/2024/06/23/pkrWjUg.md.png)](https://imgse.com/i/pkrWjUg)
+[![pAXiDHI.png](https://s21.ax1x.com/2024/12/21/pAXiDHI.png)](https://imgse.com/i/pAXiDHI)
 
 - 下载页面
 [![pkrWLb8.md.png](https://s21.ax1x.com/2024/06/23/pkrWLb8.md.png)](https://imgse.com/i/pkrWLb8)
@@ -71,6 +78,11 @@ greasyfork地址: <https://greasyfork.org/zh-CN/scripts/>
 ## 鸣谢
 
 - <https://github.com/lisonge/vite-plugin-monkey>
+
+歌词Api提供商:
+
+- <https://api.aa1.cn/doc/qqmusic_geci.html>
+- <https://api.aa1.cn/doc/geci.html>
 
 ## 最后
 

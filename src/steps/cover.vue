@@ -3,6 +3,7 @@ import { fromData } from "@/data";
 import { onMounted, reactive } from "vue";
 import Btn from "@/components/btn.vue";
 
+const emits = defineEmits(["next", "prev"]);
 const covers = reactive<{ label: string; url?: string }[]>([]);
 
 const cover = ref<string[]>([]);
@@ -24,17 +25,32 @@ onMounted(() => {
   if (url) {
     fromData.coverUrl = url.toString();
     cover.value = [url];
+    coverRecord.label = covers?.[0]?.label;
   }
 });
+
+const coverRecord = {
+  label: undefined as string | undefined,
+};
+
+function next() {
+  fromData.record.cover = coverRecord.label;
+  emits("next");
+}
 
 const onChange = (v: (string | number | boolean)[]) => {
   const val = v.pop();
   if (val) {
     fromData.coverUrl = val.toString();
     cover.value = [val.toString()];
+
+    coverRecord.label = covers.find(
+      (item) => item.url === val.toString()
+    )?.label;
   } else {
     fromData.coverUrl = null;
     cover.value = [];
+    coverRecord.label = undefined;
   }
 };
 </script>
@@ -66,7 +82,7 @@ const onChange = (v: (string | number | boolean)[]) => {
         </template>
       </a-checkbox-group>
 
-      <Btn @next="$emit('next')" @prev="$emit('prev')" />
+      <Btn @next="next" @prev="$emit('prev')" />
     </a-form>
   </a-spin>
 </template>
