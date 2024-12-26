@@ -17,11 +17,6 @@
 - **音频工作台**: 简易的片段选择，去除不需要的片段
 
 
-### 下次再说
-
-- **脚本模板**: 根据预设一键下载音频，跳过繁琐步骤
-- **额外标签嵌入**: 支持更多标签，自定义内容嵌入
-
 ## 预览图
 
 - 椒盐音乐(安卓)
@@ -33,17 +28,27 @@
 - 下载页面
 [![pkrWLb8.md.png](https://s21.ax1x.com/2024/06/23/pkrWLb8.md.png)](https://imgse.com/i/pkrWLb8)
 
+- Mini剪辑
+[![pAvDzPH.md.png](https://s21.ax1x.com/2024/12/27/pAvDzPH.md.png)](https://imgse.com/i/pAvDzPH)
+
+- 歌词工作台
+[![pAvDvIe.md.png](https://s21.ax1x.com/2024/12/27/pAvDvIe.md.png)](https://imgse.com/i/pAvDvIe)
+
 ## 已知问题
 
 1. 使用了`WASM`技术,低版本浏览器可能会导致下载失败。
 2. 不同应用程序读取歌词的逻辑各不相同,无法确定是否支持。
 3. 转码音频页面卡死
 
-## TODO
+## TODO (欢迎PR)
 
 1. 使用`WASM`进行转码
-2. prompt优化
-3. 后端错误处理优化
+2. 后端错误处理优化
+3. 前端进行歌词剪辑
+
+- **脚本模板**: 根据预设一键下载音频，跳过繁琐步骤
+- **额外标签嵌入**: 支持更多标签，自定义内容嵌入
+
 
 ## 安全声明
 
@@ -58,28 +63,6 @@
 Github开源地址: <https://github.com/ocyss/bilibili-music>
 
 greasyfork地址: <https://greasyfork.org/zh-CN/scripts/>
-
-## 参与贡献
-
-> 本项目写的一托,包括文件名,变量名,不完整的注释,解释不到位的help...,如果有更好的命名,功能解释,文件结构优化方案,请直接提交pr,让你的名字出现到贡献者名单中。
-
-1. Fork 本仓库并克隆到本地。
-2. 在新分支上进行您的更改：`git checkout -b 您的分支名称`
-3. 提交更改：`git commit -am '描述您的更改'`
-4. 推送更改到您的 Fork：`git push origin 您的分支名称`
-5. 提交 Pull 请求。
-
-- 在开发时server模式会注入脚本,也可能导致跨域问题请禁用以下两个策略
-  
-  chrome 用户:
-
-  - chrome://flags/#block-insecure-private-network-requests
-  - chrome://flags/#private-network-access-respect-preflight-results
-
-  edge 用户:
-
-  - edge://flags/#block-insecure-private-network-requests
-  - edge://flags/#private-network-access-respect-preflight-results
 
 ## 鸣谢
 

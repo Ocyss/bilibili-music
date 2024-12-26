@@ -4,7 +4,7 @@ import { onMounted, ref, computed, reactive } from "vue";
 import { request } from "@/utils/requests";
 import Btn from "@/components/btn.vue";
 import { Message, SelectOptionGroup } from "@arco-design/web-vue";
-import { callOpenAI } from "@/utils/gpt";
+import { callOpenAI, ChatCompletionMessageParam } from "@/utils/gpt";
 import { diffChars, diffWords, diffLines, Change } from "diff";
 const emits = defineEmits(["next", "prev"]);
 
@@ -37,8 +37,8 @@ const error = ref("");
 
 function next() {
   fromData.record.lyrics = lyricsRecord.label;
-  if (subtitleEdit.value && subtitleEdit.value.data) {
-    fromData.lyricsData = subtitleEdit.value.data._editBody
+  if (subtitleEdit.value && subtitleEdit.value.data && lyricsBodyContent.value) {
+    fromData.lyricsData = lyricsBodyContent.value
       .split("\n")
       .map((item, index) => [
         Math.round(subtitleEdit.value!.data!.body[index].from * 1000),
@@ -145,10 +145,11 @@ const onlineLyricsDiff = computed(() => {
 });
 
 const lyricsBodyLine = computed(() => {
-  if (!editLyricsData.value?.data) return [0, 0];
+  if (!editLyricsData.value?.data) return [0, 0,0];
   return [
     editLyricsData.value.data.body.length,
     editLyricsData.value.data._editBody.split("\n").length,
+    aiRewriteContent.value.trim().split("\n").length,
   ];
 });
 
@@ -216,6 +217,7 @@ const aiRewrite = async () => {
     Message.warning("没有可用的歌词内容");
     return;
   }
+
   aiRewriteLoading.value = true;
   const cleanLyrics = onlineLyricsContentFormat({
     timeAxis: false,
@@ -223,36 +225,61 @@ const aiRewrite = async () => {
     metaInfo: false,
   });
 
-  const prompt = `请帮我纠正以下字幕，参考互联网歌词, 根据上下文和歌词拼音就行纠正：
-\`\`\` 待纠正字幕
-${editBody}
-\`\`\`
-\`\`\` 互联网歌词
-${cleanLyrics}
-\`\`\`
-要求：
-1. 保持原有的行数和结构
-2. 不要改变歌词的基本含义
-3. 返回纠正后的完整歌词, 使用 \`\`\` 包裹`;
-
   try {
-    const result = await callOpenAI([
+    const table = editBody
+    .split("\n")
+    .map((item) => `|${item}| |`)
+    .join("\n");
+
+  const prompt: ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: `你是一个专业的字幕纠正专家。
-你的任务是根据上下文和互联网歌词来纠正字幕中的错误。但不要改变字幕的行数和结构, 改变行数会导致字幕时间线错乱。
-背景：我利用AI工具给视频添加字幕，但是错误率较高，常常导致我被老板批评, 但好在是音乐区可以联网查询歌词进行纠正，所以请你来配合我，
-要是你也纠正不了，我们就只能被辞退了，而你将是导致我辞退的罪魁祸首!!`,
+        content: `你是一个严格的字幕纠错专家。你的唯一任务是修正语音识别产生的错别字。
+        起因是我利用AI工具给视频添加字幕，但是错误率较高，常常导致我被老板批评, 要是你纠正有错不按照规则，就只能将你杀死
+        
+## 严格要求：
+1. 必须严格保持表格格式与行数，绝对禁止增加或删除任何一行
+2. 只能修改错别字，一般不改变句子结构
+3. 如果无法100%确定是错字，必须保持原样
+4. 禁止对歌词进行任何形式的重写或优化
+5. 返回纠正后的完整歌词，格式与给定的表格一致`,
       },
       {
         role: "user",
-        content: prompt,
+        content: `请帮我完成以下纠正表，参考互联网歌词和拼音进行纠正，每一行需要对应：
+\`\`\` 互联网歌词（仅供参考）
+${cleanLyrics}
+\`\`\`
+
+|待纠正字幕|纠正字幕|
+|------|------|
+${table}
+
+
+## 输出
+返回纠正后的表，要严格按照格式输出`,
       },
-    ]);
-    if (result && editLyricsData.value?.data?._editBody) {
-      console.log("AI 改写结果", result);
-      const match = result.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-      aiRewriteContent.value = match ? match[1].trim() : result;
+    ]
+    const res = await callOpenAI(prompt);
+    if (res && editLyricsData.value?.data?._editBody) {
+
+      const match = res.match(/\|(.+)\|(.+)\|/g);
+      const contentMap = editBody
+      .split("\n").reduce<Record<string, true>>((pre, cur) => {
+        pre[cur] = true
+        return pre
+      }, {})
+      let result = ""
+      for (const item of match) {
+        const l = item.split("|");
+        if (l.length === 4 && contentMap[l[1]]) {
+          result += l[2] + "\n";
+        }
+      }
+      console.log("AI 改写结果", {res, result,match,contentMap});
+      aiRewriteContent.value = result;
+      // const match = res.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
+      // aiRewriteContent.value = match ? match[1].trim() : res;
     }
   } finally {
     aiRewriteLoading.value = false;
@@ -424,7 +451,7 @@ function editLyrics(item: SubTitle) {
                       color: #4f4d4d;
                     "
                   >
-                    {{ item.data.body.map((item) => item.content).join("\n") }}
+                    {{ (subtitleEdit && subtitleEdit.data && item.id_str===subtitleEdit.id_str && lyricsBodyContent)?lyricsBodyContent: item.data.body.map((item) => item.content).join("\n") }}
                   </div>
                 </div>
               </a-space>
@@ -456,25 +483,12 @@ function editLyrics(item: SubTitle) {
       style="display: flex; height: 100%; justify-content: space-around"
     >
       <div style="width: 48%; display: flex; flex-direction: column">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <a-alert
-            :type="
-              lyricsBodyLine[0] === lyricsBodyLine[1] ? 'warning' : 'error'
-            "
-            >不要手动换行, 改变行数 {{ lyricsBodyLine[0] }}/{{
-              lyricsBodyLine[1]
-            }}</a-alert
-          >
-        </div>
         <a-textarea
           style="flex: 1; margin-right: 10px"
           v-model="editLyricsData.data._editBody"
+          show-word-limit
+          :max-length="{length:lyricsBodyLine[0],errorOnly:true}"
+          :word-length="(v:string)=>v.split('\n').length"
         />
         格式化：
         <a-input-group>
@@ -546,10 +560,10 @@ function editLyrics(item: SubTitle) {
             </div>
           </a-spin>
         </a-tab-pane>
-        <a-tab-pane key="2" title="AI 改写">
+        <a-tab-pane key="2" title="AI 改写" style="display: flex; flex-direction: column">
           <a-button-group>
             <a-alert type="info"
-              >将网络歌词交给AI进行纠正(prompt待优化)</a-alert
+              >将网络歌词给AI进行纠正</a-alert
             >
             <a-button type="primary" @click="aiRewrite">AI 改写</a-button>
             <a-trigger trigger="click" :unmount-on-close="false">
@@ -580,12 +594,13 @@ function editLyrics(item: SubTitle) {
             </a-trigger>
           </a-button-group>
           <a-spin
-            style="margin-top: 10px; height: 100%; overflow: auto; width: 100%"
+            style="margin-top: 10px; flex:1; overflow: auto; width: 100%"
             :loading="aiRewriteLoading"
           >
-            <a-select
-              v-model="lyricsBodySwitch.aiDiff"
-              style="margin-bottom: 10px"
+            <div style="margin-bottom: 10px">
+              <a-select
+                v-model="lyricsBodySwitch.aiDiff"
+              >
             >
               <a-option
                 v-for="[key, [label]] in Object.entries(diffFunc)"
@@ -595,6 +610,13 @@ function editLyrics(item: SubTitle) {
                 {{ label }}
               </a-option>
             </a-select>
+            <a-alert
+            :type="
+              lyricsBodyLine[0] === lyricsBodyLine[2] ? 'success' : 'error'
+            "
+            ><span style="margin-right: 20px">原行数：{{ lyricsBodyLine[0] }}</span><span>AI行数：{{lyricsBodyLine[2]}}</span>
+            </a-alert
+          ></div>
             <div class="diff-container-textarea">
               <span
                 v-for="(part, index) in aiLyricsDiff"
@@ -628,7 +650,15 @@ function editLyrics(item: SubTitle) {
 .arco-textarea {
   resize: none;
 }
+
+.arco-tabs-pane{
+  display: flex;
+  flex-direction: column;
+}
+
 .diff-container-textarea {
+  overflow-y: scroll;
+  flex:1;
   white-space: pre-wrap;
   font-family: monospace;
   background: #f5f5f5;

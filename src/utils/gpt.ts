@@ -1,9 +1,12 @@
 import { userConfig } from "@/data";
 import { Message } from "@arco-design/web-vue";
 
-export async function callOpenAI(
-  prompt: { role: "system" | "user" | "assistant"; content: string }[]
-) {
+export type ChatCompletionMessageParam = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+export async function callOpenAI(prompt: ChatCompletionMessageParam[]) {
   const { host, key, modal } = userConfig.openai;
 
   try {
