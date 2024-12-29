@@ -3,7 +3,7 @@ import elmGetter from "./utils/elmGetter";
 import { createApp } from "vue";
 import "./style.css";
 import App from "./App.vue";
-import { GM_getResourceURL, GM_registerMenuCommand } from "$";
+import { GM_getResourceURL, GM_registerMenuCommand, unsafeWindow } from "$";
 import { defaultData } from "./data";
 import { drop } from "./utils/drop";
 
@@ -65,7 +65,7 @@ const initFileOpen = () => {
 
   document.documentElement.appendChild(file);
 
-  document.body.addEventListener(
+  document.documentElement.addEventListener(
     "dragenter",
     function (e) {
       if (!e.dataTransfer?.types.includes("Files")) return;
@@ -76,7 +76,7 @@ const initFileOpen = () => {
     false
   );
 
-  document.body.addEventListener(
+  document.documentElement.addEventListener(
     "dragover",
     function (e) {
       if (!e.dataTransfer?.types.includes("Files")) return;
@@ -87,7 +87,7 @@ const initFileOpen = () => {
     false
   );
 
-  document.body.addEventListener(
+  document.documentElement.addEventListener(
     "dragleave",
     function (e) {
       if (!e.dataTransfer?.types.includes("Files")) return;
@@ -98,7 +98,7 @@ const initFileOpen = () => {
     false
   );
 
-  document.body.addEventListener("drop", async function (e) {
+  document.documentElement.addEventListener("drop", async function (e) {
     if (!e.dataTransfer?.types.includes("Files")) return;
     e.preventDefault();
     e.stopPropagation();
@@ -112,8 +112,8 @@ GM_registerMenuCommand("打开音乐姬🎶", main);
 
 initFileOpen();
 
-window._bilibili_music_open = main;
-window._bilibili_music_fileOpen = initFileOpen;
+unsafeWindow._bilibili_music_open = main;
+unsafeWindow._bilibili_music_fileOpen = initFileOpen;
 
 declare global {
   interface Window {

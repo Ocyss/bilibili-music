@@ -79,24 +79,62 @@ function findAudioSourceWebpage(buffer: Uint8Array): string | null {
   // 跳过ID3头部10字节
   let pos = 10;
 
+  // 添加最大帧大小限制，防止异常数据
+  const MAX_FRAME_SIZE = 1024 * 1024; // 1MB
+
   while (pos < buffer.length - 10) {
+    // 确保有足够的字节来读取帧头
+    if (pos + 10 > buffer.length) {
+      break;
+    }
+
+    // 验证帧ID是否包含有效的ASCII字符
+    const isValidFrameId = buffer
+      .slice(pos, pos + 4)
+      .every((byte) => (byte >= 0x20 && byte <= 0x7e) || byte === 0x00);
+
+    if (!isValidFrameId) {
+      console.warn("检测到无效的帧ID");
+      break;
+    }
+
     // 读取帧ID（4字节）
     const frameId = decoder.decode(buffer.slice(pos, pos + 4));
 
-    // 读取帧大小（4字节）
+    // 使用无符号整数读取帧大小，避免负数
     const frameSize =
-      (buffer[pos + 4] << 24) |
-      (buffer[pos + 5] << 16) |
-      (buffer[pos + 6] << 8) |
-      buffer[pos + 7];
+      ((buffer[pos + 4] & 0x7f) << 24) |
+      ((buffer[pos + 5] & 0x7f) << 16) |
+      ((buffer[pos + 6] & 0x7f) << 8) |
+      (buffer[pos + 7] & 0x7f);
+
+    // 验证frameSize的有效性
+    if (frameSize <= 0 || frameSize > MAX_FRAME_SIZE) {
+      console.warn(`无效的帧大小: ${frameSize}, frameId: ${frameId}`);
+      break;
+    }
+
+    // 确保有足够的字节来读取帧内容
+    if (pos + 10 + frameSize > buffer.length) {
+      console.warn("帧大小超出缓冲区范围");
+      break;
+    }
 
     // 跳过帧标志（2字节）
     pos += 10;
 
     if (frameId === "WOAS") {
-      const urlData = decoder.decode(buffer.slice(pos, pos + frameSize - 1));
-      return urlData;
+      try {
+        const urlData = decoder.decode(buffer.slice(pos, pos + frameSize - 1));
+        if (urlData.startsWith("http")) {
+          return urlData;
+        }
+      } catch (e) {
+        console.warn("URL解码失败");
+      }
     }
+
+    console.log("bilibili_drop", frameId, frameSize);
     pos += frameSize;
   }
 

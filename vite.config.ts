@@ -63,10 +63,7 @@ export default defineConfig(() => {
           },
         },
         userscript: {
-          name:
-            VITE_RELEASE_MODE === "release"
-              ? "Bilibili🎶音乐姬"
-              : `Bilibili🎶音乐姬 [${VITE_RELEASE_MODE}]`,
+          name: "Bilibili🎶音乐姬",
           version: VITE_VERSION,
           description:
             "仅帮助用户从视频页下载音乐(封面,Tags,歌词,字幕 写入支持)的油猴脚本",
