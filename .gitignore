@@ -27,3 +27,5 @@ backend/data
 backend/target
 backend/pkg
 backend/testdata/test_out*.wav
+
+!update.log
