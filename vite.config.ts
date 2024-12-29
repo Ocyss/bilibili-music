@@ -8,8 +8,10 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ArcoResolver } from "unplugin-vue-components/resolvers";
 import wasm from "vite-plugin-wasm";
+import fs from "fs";
 
 const pathSrc = path.resolve(__dirname, "src");
+const rootDir = process.cwd();
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -40,6 +42,26 @@ export default defineConfig(() => {
       }),
       monkey({
         entry: "src/main.ts",
+        format: {
+          generate(uOptions) {
+            if (uOptions.mode === "build") {
+              const filePath = path.join(rootDir, "update.log");
+              const fileContent = fs.readFileSync(filePath, "utf-8");
+              const lines = fileContent.trim().split("\n");
+              const lastTenLines = lines.slice(-30);
+              const log = lastTenLines
+                .reverse()
+                .map((line) => `// ${line}`)
+                .join("\n");
+              return (
+                uOptions.userscript +
+                `\n// 更新日志[只显示最新的10条,🌟🤡 分别代表新功能和bug修复]\n${log}`
+              );
+            } else {
+              return uOptions.userscript;
+            }
+          },
+        },
         userscript: {
           name:
             VITE_RELEASE_MODE === "release"
@@ -54,8 +76,9 @@ export default defineConfig(() => {
           icon: " https://static.hdslb.com/images/favicon.ico",
           namespace: "https://github.com/Ocyss/bilibili-music",
           homepage: "https://github.com/Ocyss/bilibili-music",
-          match: ["https://www.bilibili.com/video/*"],
+          match: ["https://www.bilibili.com/video/*", "*://www.bilibili.com"],
           connect: [
+            "api.bilibili.com",
             "bilibili.com",
             "hdslb.com",
             "mxnzp.com",
@@ -65,8 +88,12 @@ export default defineConfig(() => {
           ],
           resource: {
             bilibili_music_backend_bg:
-              "https://fastly.jsdelivr.net/npm/@ocyss/bilibili-music-backend@0.1.2/bilibili_music_backend_bg.wasm",
+              "https://fastly.jsdelivr.net/npm/@ocyss/bilibili-music-backend@0.2.0/bilibili_music_backend_bg.wasm",
           },
+          downloadURL:
+            "https://update.greasyfork.org/scripts/498677/Bilibili%F0%9F%8E%B6%E9%9F%B3%E4%B9%90%E5%A7%AC.user.js",
+          updateURL:
+            "https://update.greasyfork.org/scripts/498677/Bilibili%F0%9F%8E%B6%E9%9F%B3%E4%B9%90%E5%A7%AC.user.js",
         },
         build: {
           externalGlobals: {

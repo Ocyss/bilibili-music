@@ -126,9 +126,11 @@ function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
     fileReader.readAsArrayBuffer(blob);
   });
 }
+
 function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
   return blobToArrayBuffer(blob).then((buff) => new Uint8Array(buff));
 }
+
 function uint8ArrayToBlob(array: Uint8Array, type?: string): Blob {
   return new Blob([array], { type });
 }

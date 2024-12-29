@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ocyss/bilibili-music-backend": "0.1.2",
+    "@ocyss/bilibili-music-backend": "0.2.0",
     "audiobuffer-to-blob": "^1.0.2",
     "diff": "^7.0.0",
     "file-saver": "^2.0.5",

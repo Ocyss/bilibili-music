@@ -5,6 +5,7 @@ import "./style.css";
 import App from "./App.vue";
 import { GM_getResourceURL, GM_registerMenuCommand } from "$";
 import { defaultData } from "./data";
+import { drop } from "./utils/drop";
 
 GM_getResourceURL("bilibili_music_backend_bg");
 
@@ -28,14 +29,97 @@ elmGetter.each(".tag-panel .tag .bgm-tag", (elm) => {
   return true;
 });
 
+const initFileOpen = () => {
+  if (window.self !== window.top) {
+    return;
+  }
+
+  const file = document.createElement("div");
+  console.log("开始初始化 File 拖选框", file);
+  file.id = "bilibili-music-file";
+  file.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    pointer-events: none;
+    display: none;
+    color: white;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: none;
+  `;
+  file.innerHTML = `
+    <div style="text-align: center;">
+      <svg style="width: 64px; height: 64px; margin-bottom: 16px;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <path fill="currentColor" d="M544 864V672h192L512 448 288 672h192v192H544zM512 384l224-224H544V0H480v160H288l224 224z"/>
+      </svg>
+      <div>拖放打开对应视频</div>
+    </div>
+  `;
+
+  document.documentElement.appendChild(file);
+
+  document.body.addEventListener(
+    "dragenter",
+    function (e) {
+      if (!e.dataTransfer?.types.includes("Files")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      file.style.display = "flex";
+    },
+    false
+  );
+
+  document.body.addEventListener(
+    "dragover",
+    function (e) {
+      if (!e.dataTransfer?.types.includes("Files")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      file.style.display = "flex";
+    },
+    false
+  );
+
+  document.body.addEventListener(
+    "dragleave",
+    function (e) {
+      if (!e.dataTransfer?.types.includes("Files")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      file.style.display = "none";
+    },
+    false
+  );
+
+  document.body.addEventListener("drop", async function (e) {
+    if (!e.dataTransfer?.types.includes("Files")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    file.style.display = "none";
+    const droppedFiles = e.dataTransfer?.files;
+    drop(droppedFiles);
+  });
+};
+
 GM_registerMenuCommand("打开音乐姬🎶", main);
 
+initFileOpen();
+
 window._bilibili_music_open = main;
+window._bilibili_music_fileOpen = initFileOpen;
 
 declare global {
   interface Window {
     _bilibili_music_fromData: typeof defaultData;
     _bilibili_music_userConfig: any;
     _bilibili_music_open: () => void;
+    _bilibili_music_fileOpen: () => void;
   }
 }

@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "bilibili-music-backend"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["ocyss <bilimusic@ocyss.icu>"]
 description = "Bilibili🎶音乐姬 后端WASM程序"
 license = "MIT/Apache-2.0"

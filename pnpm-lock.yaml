@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@ocyss/bilibili-music-backend':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.2.0
+        version: 0.2.0
       audiobuffer-to-blob:
         specifier: ^1.0.2
         version: 1.0.2
@@ -308,8 +308,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@ocyss/bilibili-music-backend@0.1.2':
-    resolution: {integrity: sha512-KB9qmJ8YjJm6Kw4IanQIIK0++uHM3zAyHtNJpHFkwIi0ja4KxT6mUONIdR7cCr1vtfTjnaz0mlmwtOsYnxipkA==}
+  '@ocyss/bilibili-music-backend@0.2.0':
+    resolution: {integrity: sha512-p1/jkjLN3rNc4HNmFj6q6saqN53pEIVsNw3gU7l7ei7BAR542EpZi1mYfcOQgxQkLRHV+l2XpK3oI4i7irRkzQ==}
 
   '@rollup/pluginutils@5.1.0':
     resolution: {integrity: sha512-XTIWOPPcpvyKI6L1NHo0lFlCyznUEyPmPY1mc3KpPVDYulHSTvyeLNVW00QTLIAFNhR3kYnJTQHeGqU4M3n09g==}
@@ -1327,7 +1327,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@ocyss/bilibili-music-backend@0.1.2': {}
+  '@ocyss/bilibili-music-backend@0.2.0': {}
 
   '@rollup/pluginutils@5.1.0(rollup@4.18.0)':
     dependencies:

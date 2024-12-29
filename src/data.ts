@@ -1,6 +1,7 @@
 import { reactive } from "vue";
 import { deepmerge, clone } from "./utils/deepmerge";
 import { GM_getValue, GM_setValue, unsafeWindow } from "$";
+import { ClipRanges, Lyrics } from "@ocyss/bilibili-music-backend";
 
 export const defaultUserConfig = {
   openai: {
@@ -25,8 +26,8 @@ export const defaultData = {
   data: null as MusicData | null,
   err: null as any,
   coverUrl: null as null | string,
-  lyricsData: null as null | Array<[number, string]>,
-  clipRanges: null as null | Array<[number, number]>,
+  lyricsData: null as null | Lyrics,
+  clipRanges: null as null | ClipRanges,
   videoData: null as VideoData | null,
   playerData: null as PlayerData | null,
   videoParse: null as VideoParse | null,

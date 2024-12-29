@@ -6,6 +6,7 @@ import Btn from "@/components/btn.vue";
 import { Message, SelectOptionGroup } from "@arco-design/web-vue";
 import { callOpenAI, ChatCompletionMessageParam } from "@/utils/gpt";
 import { diffChars, diffWords, diffLines, Change } from "diff";
+import { Lyrics, lyrics_clip } from "@ocyss/bilibili-music-backend";
 const emits = defineEmits(["next", "prev"]);
 
 type SubTitle = PlayerData["subtitle"]["subtitles"][number];
@@ -37,8 +38,14 @@ const error = ref("");
 
 function next() {
   fromData.record.lyrics = lyricsRecord.label;
-  if (subtitleEdit.value && subtitleEdit.value.data && lyricsBodyContent.value) {
-    fromData.lyricsData = lyricsBodyContent.value
+  let lyricsData: Lyrics = [];
+  if (
+    subtitleEdit.value &&
+    subtitleEdit.value.data &&
+    lyricsBodyContent.value
+  ) {
+    // 打开工作台就剪辑
+    lyricsData = lyricsBodyContent.value
       .split("\n")
       .map((item, index) => [
         Math.round(subtitleEdit.value!.data!.body[index].from * 1000),
@@ -53,12 +60,18 @@ function next() {
         Message.error("歌词数据错误");
         return;
       }
-      fromData.lyricsData = s.data.body.map((item) => [
+      lyricsData = s.data.body.map((item) => [
         Math.round(item.from * 1000),
         item.content,
       ]);
+      // 直接下一页的时候在剪辑歌词
+      if (fromData.clipRanges && fromData.clipRanges.length > 0) {
+        lyricsData = lyrics_clip(fromData.clipRanges, lyricsData);
+      }
     }
   }
+
+  fromData.lyricsData = lyricsData;
   emits("next");
 }
 
@@ -145,9 +158,12 @@ const onlineLyricsDiff = computed(() => {
 });
 
 const lyricsBodyLine = computed(() => {
-  if (!editLyricsData.value?.data) return [0, 0,0];
+  // 原长度，剪辑长度，AI改写长度
+  if (!editLyricsData.value?.data) return [0, 0, 0];
   return [
-    editLyricsData.value.data.body.length,
+    !!editLyricsData.value.data._lyricsBody
+      ? editLyricsData.value.data._lyricsBody.length
+      : editLyricsData.value.data.body.length,
     editLyricsData.value.data._editBody.split("\n").length,
     aiRewriteContent.value.trim().split("\n").length,
   ];
@@ -211,27 +227,33 @@ const aiLyricsDiff = computed(() => {
   );
 });
 
+const aiRewritePrompt = ref("{{onlineLyrics}}");
+
 const aiRewrite = async () => {
   const editBody = editLyricsData.value?.data?._editBody;
   if (!editBody) {
     Message.warning("没有可用的歌词内容");
     return;
   }
-
   aiRewriteLoading.value = true;
-  const cleanLyrics = onlineLyricsContentFormat({
-    timeAxis: false,
-    blankChar: false,
-    metaInfo: false,
-  });
 
+  function render(template: string, context: Record<string, string>) {
+    return template.replace(/\{\{(.*?)\}\}/g, (match, key) => context[key]);
+  }
+  const _prompt = render(aiRewritePrompt.value, {
+    onlineLyrics: onlineLyricsContentFormat({
+      timeAxis: false,
+      blankChar: false,
+      metaInfo: false,
+    }),
+  });
   try {
     const table = editBody
-    .split("\n")
-    .map((item) => `|${item}| |`)
-    .join("\n");
+      .split("\n")
+      .map((item) => `|${item}| |`)
+      .join("\n");
 
-  const prompt: ChatCompletionMessageParam[] = [
+    const prompt: ChatCompletionMessageParam[] = [
       {
         role: "system",
         content: `你是一个严格的字幕纠错专家。你的唯一任务是修正语音识别产生的错别字。
@@ -248,7 +270,7 @@ const aiRewrite = async () => {
         role: "user",
         content: `请帮我完成以下纠正表，参考互联网歌词和拼音进行纠正，每一行需要对应：
 \`\`\` 互联网歌词（仅供参考）
-${cleanLyrics}
+${_prompt}
 \`\`\`
 
 |待纠正字幕|纠正字幕|
@@ -259,24 +281,24 @@ ${table}
 ## 输出
 返回纠正后的表，要严格按照格式输出`,
       },
-    ]
+    ];
     const res = await callOpenAI(prompt);
     if (res && editLyricsData.value?.data?._editBody) {
-
       const match = res.match(/\|(.+)\|(.+)\|/g);
       const contentMap = editBody
-      .split("\n").reduce<Record<string, true>>((pre, cur) => {
-        pre[cur] = true
-        return pre
-      }, {})
-      let result = ""
+        .split("\n")
+        .reduce<Record<string, true>>((pre, cur) => {
+          pre[cur] = true;
+          return pre;
+        }, {});
+      let result = "";
       for (const item of match) {
         const l = item.split("|");
         if (l.length === 4 && contentMap[l[1]]) {
           result += l[2] + "\n";
         }
       }
-      console.log("AI 改写结果", {res, result,match,contentMap});
+      console.log("AI 改写结果", { res, result, match, contentMap });
       aiRewriteContent.value = result;
       // const match = res.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
       // aiRewriteContent.value = match ? match[1].trim() : res;
@@ -390,9 +412,23 @@ async function searchOnlineLyrics() {
 function editLyrics(item: SubTitle) {
   editLyricsData.value = JSON.parse(JSON.stringify(item)) as Subtitle2;
   if (editLyricsData.value.data) {
-    editLyricsData.value.data._editBody = editLyricsData.value.data.body
-      .map((item) => item.content.replaceAll(/(^♪ )|( ♪$)/g, ""))
-      .join("\n");
+    if (fromData.clipRanges && fromData.clipRanges.length > 0) {
+      editLyricsData.value.data._lyricsBody = lyrics_clip(
+        fromData.clipRanges,
+        editLyricsData.value.data.body.map((item) => [
+          Math.round(item.from * 1000),
+          item.content,
+        ])
+      );
+      editLyricsData.value.data._editBody =
+        editLyricsData.value.data._lyricsBody
+          .map((item) => item[1].replaceAll(/(^♪ )|( ♪$)/g, ""))
+          .join("\n");
+    } else {
+      editLyricsData.value.data._editBody = editLyricsData.value.data.body
+        .map((item) => item.content.replaceAll(/(^♪ )|( ♪$)/g, ""))
+        .join("\n");
+    }
   }
   onlineSearch.value = fromData.data?.music_title || "";
 
@@ -451,7 +487,14 @@ function editLyrics(item: SubTitle) {
                       color: #4f4d4d;
                     "
                   >
-                    {{ (subtitleEdit && subtitleEdit.data && item.id_str===subtitleEdit.id_str && lyricsBodyContent)?lyricsBodyContent: item.data.body.map((item) => item.content).join("\n") }}
+                    {{
+                      subtitleEdit &&
+                      subtitleEdit.data &&
+                      item.id_str === subtitleEdit.id_str &&
+                      lyricsBodyContent
+                        ? lyricsBodyContent
+                        : item.data.body.map((item) => item.content).join("\n")
+                    }}
                   </div>
                 </div>
               </a-space>
@@ -487,7 +530,7 @@ function editLyrics(item: SubTitle) {
           style="flex: 1; margin-right: 10px"
           v-model="editLyricsData.data._editBody"
           show-word-limit
-          :max-length="{length:lyricsBodyLine[0],errorOnly:true}"
+          :max-length="{ length: lyricsBodyLine[0], errorOnly: true }"
           :word-length="(v:string)=>v.split('\n').length"
         />
         格式化：
@@ -560,11 +603,14 @@ function editLyrics(item: SubTitle) {
             </div>
           </a-spin>
         </a-tab-pane>
-        <a-tab-pane key="2" title="AI 改写" style="display: flex; flex-direction: column">
+        <a-tab-pane
+          key="2"
+          title="AI 改写"
+          style="display: flex; flex-direction: column"
+        >
           <a-button-group>
-            <a-alert type="info"
-              >将网络歌词给AI进行纠正</a-alert
-            >
+            <a-alert type="info">将网络歌词给AI进行纠正</a-alert>
+
             <a-button type="primary" @click="aiRewrite">AI 改写</a-button>
             <a-trigger trigger="click" :unmount-on-close="false">
               <a-button type="primary">
@@ -594,29 +640,58 @@ function editLyrics(item: SubTitle) {
             </a-trigger>
           </a-button-group>
           <a-spin
-            style="margin-top: 10px; flex:1; overflow: auto; width: 100%"
+            style="margin-top: 10px; flex: 1; overflow: auto; width: 100%"
             :loading="aiRewriteLoading"
           >
+            <a-collapse style="margin-bottom: 10px">
+              <a-collapse-item header="自定义 Prompt" key="1">
+                <a-space style="margin-bottom: 10px">
+                  <a-button
+                    type="primary"
+                    @click="aiRewritePrompt += ' {{onlineLyrics}}'"
+                  >
+                    在线歌词
+                  </a-button>
+
+                  <a-button-group>
+                    <a-button
+                      type="primary"
+                      @click="aiRewritePrompt += ' {{danmu}}'"
+                      :disabled="true"
+                    >
+                      添加弹幕
+                    </a-button>
+                  </a-button-group>
+                </a-space>
+                <a-textarea
+                  v-model="aiRewritePrompt"
+                  :auto-size="{
+                    minRows: 4,
+                    maxRows: 10,
+                  }"
+                />
+              </a-collapse-item>
+            </a-collapse>
             <div style="margin-bottom: 10px">
-              <a-select
-                v-model="lyricsBodySwitch.aiDiff"
-              >
-            >
-              <a-option
-                v-for="[key, [label]] in Object.entries(diffFunc)"
-                :key="key"
-                :value="key"
-              >
-                {{ label }}
-              </a-option>
-            </a-select>
-            <a-alert
-            :type="
-              lyricsBodyLine[0] === lyricsBodyLine[2] ? 'success' : 'error'
-            "
-            ><span style="margin-right: 20px">原行数：{{ lyricsBodyLine[0] }}</span><span>AI行数：{{lyricsBodyLine[2]}}</span>
-            </a-alert
-          ></div>
+              <a-select v-model="lyricsBodySwitch.aiDiff">
+                >
+                <a-option
+                  v-for="[key, [label]] in Object.entries(diffFunc)"
+                  :key="key"
+                  :value="key"
+                >
+                  {{ label }}
+                </a-option>
+              </a-select>
+              <a-alert
+                :type="
+                  lyricsBodyLine[0] === lyricsBodyLine[2] ? 'success' : 'error'
+                "
+                ><span style="margin-right: 20px"
+                  >原行数：{{ lyricsBodyLine[0] }}</span
+                ><span>AI行数：{{ lyricsBodyLine[2] }}</span>
+              </a-alert>
+            </div>
             <div class="diff-container-textarea">
               <span
                 v-for="(part, index) in aiLyricsDiff"
@@ -651,14 +726,14 @@ function editLyrics(item: SubTitle) {
   resize: none;
 }
 
-.arco-tabs-pane{
+.arco-tabs-pane {
   display: flex;
   flex-direction: column;
 }
 
 .diff-container-textarea {
   overflow-y: scroll;
-  flex:1;
+  flex: 1;
   white-space: pre-wrap;
   font-family: monospace;
   background: #f5f5f5;
@@ -677,7 +752,6 @@ function editLyrics(item: SubTitle) {
   padding: 4px 12px;
   font-size: 14px;
   line-height: 1.5715;
-  resize: vertical;
   font-family: var(--bew-font-family, var(--bew-fonts-mandarin-cn));
 }
 </style>
