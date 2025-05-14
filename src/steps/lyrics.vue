@@ -12,7 +12,7 @@ const emits = defineEmits(["next", "prev"]);
 type SubTitle = PlayerData["subtitle"]["subtitles"][number];
 
 const subtitles = ref<SubTitle[]>([]);
-
+const noSubtitle = ref(false);
 const subtitle = ref<string[]>([]);
 
 const subtitleEdit = ref<SubTitle | null>(null);
@@ -39,7 +39,9 @@ const error = ref("");
 function next() {
   fromData.record.lyrics = lyricsRecord.label;
   let lyricsData: Lyrics = [];
-  if (
+  if (noSubtitle.value) {
+    Message.info("跳过歌词嵌入");
+  }else if (
     subtitleEdit.value &&
     subtitleEdit.value.data &&
     lyricsBodyContent.value
@@ -80,6 +82,7 @@ onMounted(() => {
   const cid = fromData.videoData.cid.toString();
   const bvid = fromData.videoData.bvid;
   const aid = fromData.videoData.aid.toString();
+  console.log({ cid, bvid, aid });
   // if (fromData.data) {
   //   request.get({ url: fromData.data.mv_lyric }).then((res) => {
   //     if (!fromData.data) return;
@@ -98,9 +101,16 @@ onMounted(() => {
         }),
     })
     .then(async (res: any) => {
-      fromData.playerData = res.data;
+      console.log("playerData", res);
+      if (!res.data) return;
+      fromData.playerData = res.data as PlayerData;
+      if (fromData.playerData.subtitle.subtitles.length === 0) {
+        error.value = "当前视频没有字幕";
+        noSubtitle.value = true;
+        return;
+      }
       const _subtitles = await Promise.all(
-        (res.data as PlayerData).subtitle.subtitles.map(async (item) => {
+        fromData.playerData.subtitle.subtitles.map(async (item) => {
           item.data = await request.get({ url: `http:${item.subtitle_url}` });
           return item;
         })
