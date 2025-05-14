@@ -15,9 +15,9 @@ const infoMaps = computed(() => [
   fromData.data?.origin_artist || "",
 ]);
 
-const titleSelects = ["4-3", "4-5", "1-3", "4", "1"];
-const authorSelects = ["3(原:5)", "3-5", "3", "5"];
-const fileSelects = ["4-3", "4-5", "1-3", "4", "1"];
+const titleSelects = fromData.data?["4-3", "4-5", "1-3", "4", "1"]:["1-3","1"];
+const authorSelects = fromData.data?["3(原:5)", "3-5", "3", "5"]:["3"];
+const fileSelects = fromData.data?["4-3", "4-5", "1-3", "4", "1"]:["1-3","1"];
 
 const infoRecord = {
   title: "",
@@ -31,7 +31,7 @@ function next() {
 }
 
 const handleSelect = (type: keyof typeof infoRecord, format: string) => {
-  GM_setValue(`${type}-format`, format);
+  GM_setValue(`${type}-format${!fromData.data ? "_no_music" : ""}`, format);
   infoRecord[type] = format;
   const maps = infoMaps.value;
   return format
@@ -56,9 +56,10 @@ const handleFileSelect = (value: string) => {
 };
 
 onMounted(() => {
-  const titleFormat = GM_getValue(`title-format`, titleSelects[0]);
-  const authorFormat = GM_getValue(`author-format`, authorSelects[0]);
-  const fileFormat = GM_getValue(`file-format`, fileSelects[0]);
+  const noMusic = !fromData.data ? "_no_music" : "";
+  const titleFormat = GM_getValue(`title-format${noMusic}`, titleSelects[0]);
+  const authorFormat = GM_getValue(`author-format${noMusic}`, authorSelects[0]);
+  const fileFormat = GM_getValue(`file-format${noMusic}`, fileSelects[0]);
 
   handleTitleSelect(titleFormat);
   handleAuthorSelect(authorFormat);
@@ -67,7 +68,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-spin :loading="!fromData.data">
     <a-form auto-label-width :model="{}">
       <template v-if="fromData.videoData">
         <a-form-item label="标题(1)">
@@ -142,7 +142,6 @@ onMounted(() => {
       </a-form-item>
       <Btn @next="next" @prev="$emit('prev')" />
     </a-form>
-  </a-spin>
 </template>
 
 <style scoped></style>

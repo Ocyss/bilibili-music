@@ -9,14 +9,18 @@ const covers = reactive<{ label: string; url?: string }[]>([]);
 const cover = ref<string[]>([]);
 
 onMounted(() => {
+
   covers.push({
     label: "视频封面",
     url: fromData.videoData?.pic,
   });
-  covers.push({
-    label: "音乐封面",
-    url: fromData.data?.mv_cover,
-  });
+
+  if (fromData.data) {
+    covers.push({
+      label: "音乐封面",
+      url: fromData.data?.mv_cover,
+    });
+  }
   covers.push({
     label: "Up主头像",
     url: fromData.videoData?.owner.face,
@@ -56,7 +60,6 @@ const onChange = (v: (string | number | boolean)[]) => {
 </script>
 
 <template>
-  <a-spin :loading="!fromData.data || covers.length !== 3">
     <a-form auto-label-width :model="{}">
       <a-checkbox-group :model-value="cover" @change="onChange">
         <template v-for="item in covers" :key="item.label">
@@ -84,7 +87,6 @@ const onChange = (v: (string | number | boolean)[]) => {
 
       <Btn @next="next" @prev="$emit('prev')" />
     </a-form>
-  </a-spin>
 </template>
 
 <style scoped></style>

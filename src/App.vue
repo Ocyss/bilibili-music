@@ -14,6 +14,8 @@ const current = ref(1);
 const steps = [StepMontage, StepInfo, StepCover, StepLyrics, StepAudio];
 
 const handleOk = () => {
+  Message.error("暂未实现");
+  return false
   const defaultRule = GM_getValue("default_rule");
   if (!defaultRule) {
     Message.error("未找到默认规则");
@@ -55,12 +57,6 @@ onMounted(() => {
   const bgmTag = document.querySelector<HTMLDivElement & { __vue__: any }>(
     ".tag .bgm-tag"
   );
-  const music_id = bgmTag?.__vue__?.$props?.info?.music_id;
-  if (!music_id) {
-    fromData.err = "未找到音乐ID，后续操作无法继续";
-    return;
-  }
-  console.log("获取到的Music ID:", music_id, bgmTag?.__vue__);
 
   fromData.videoData = clone(
     document.querySelector<HTMLDivElement & { __vue__: any }>("#playerWrap")
@@ -70,6 +66,10 @@ onMounted(() => {
     fromData.err = "未找到视频数据，后续操作无法继续";
     return;
   }
+
+  const music_id = bgmTag?.__vue__?.$props?.info?.music_id;
+  if (music_id) {
+  console.log("获取到的Music ID:", music_id, bgmTag?.__vue__);
   fetch(
     "https://api.bilibili.com/x/copyright-music-publicity/bgm/detail?" +
       new URLSearchParams({
@@ -85,6 +85,7 @@ onMounted(() => {
     .catch((e) => {
       fromData.err = e;
     });
+  }
 });
 
 function onOpen() {
@@ -159,12 +160,10 @@ function onOpen() {
           subtitle="您可以重新打开弹窗, 重新获取数据, 或者刷新页面. 如果多次且更换视频也无法使用请联系开发者"
         />
         <component
-          v-else-if="fromData.data"
           :is="steps[current - 1]"
           @prev="onPrev"
           @next="onNext"
         />
-        <a-spin v-else />
       </div>
     </div>
   </a-modal>

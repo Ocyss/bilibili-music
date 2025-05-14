@@ -309,7 +309,7 @@ function next() {
 </script>
 
 <template>
-  <a-spin :loading="!fromData.data">
+
     <div class="montage-container">
       <a-spin :loading="isAuditioning">
         <!-- 控制按钮 -->
@@ -410,9 +410,9 @@ function next() {
           </a-list-item>
         </a-list>
       </a-spin>
-      <Btn prevLabel="试听" @next="next" @prev="startAudition" />
+      <Btn :prevLabel="!isAuditioning ? '试听' : '暂停'" @next="next" @prev="startAudition" />
     </div>
-  </a-spin>
+
 </template>
 
 <style scoped>
