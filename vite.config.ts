@@ -73,7 +73,7 @@ export default defineConfig(() => {
           icon: " https://static.hdslb.com/images/favicon.ico",
           namespace: "https://github.com/Ocyss/bilibili-music",
           homepage: "https://github.com/Ocyss/bilibili-music",
-          match: ["https://www.bilibili.com/video/*", "*://www.bilibili.com"],
+          match: ["https://www.bilibili.com/video/*", "https://www.bilibili.com/list/*", "*://www.bilibili.com"],
           connect: [
             "api.bilibili.com",
             "bilibili.com",
